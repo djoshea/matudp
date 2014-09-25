@@ -1,0 +1,6 @@
+function bytes = serialize(busIn)
+%#codegen 
+
+    bytes = {{ serializeFn }}(busIn);
+
+end

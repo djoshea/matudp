@@ -1,0 +1,7 @@
+*.o
+*.pch
+*~
+signalLogger
+build/*
+bin/*
+

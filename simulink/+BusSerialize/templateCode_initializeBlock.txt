@@ -1,0 +1,6 @@
+function bus = initialize_{{ busName }}()
+%#codegen 
+
+    bus = {{ initFn }}();
+
+end

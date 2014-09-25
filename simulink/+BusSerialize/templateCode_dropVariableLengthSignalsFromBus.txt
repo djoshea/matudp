@@ -1,0 +1,6 @@
+function busFixed = convertTo{{ busFixedName }}(bus)
+%#codegen
+
+    busFixed = {{ convertFn }}(bus);
+
+end

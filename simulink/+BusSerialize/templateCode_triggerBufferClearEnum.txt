@@ -1,0 +1,11 @@
+function [buffer, len] = clearIfNewTimestamp(input, inputLen, lastTimestamp, currentTimestamp)
+%#codegen
+
+if lastTimestamp == currentTimestamp
+    buffer = int32(input);
+    len = inputLen;
+else
+    % let data type conversion block handle the conversion back to enum type
+    buffer = zeros(0, 1, 'int32');
+    len = zeros(1, 1, class(inputLen));
+end

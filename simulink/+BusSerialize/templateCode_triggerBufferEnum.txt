@@ -1,0 +1,28 @@
+function [buffer, len] = bufferEachTick(input, timestamp, bufferSize)
+%#codegen
+
+persistent pBuffer;
+persistent pLastTimestamp;
+
+coder.varsize('pBuffer', bufferSize+1, true);
+
+clear = uint8(0);
+
+% initialize persistents
+if isempty(pBuffer) || isempty(pLastTimestamp)
+    pBuffer = {{ enumName }}.{{ enumDefaultValue }};
+    pLastTimestamp = timestamp;
+end
+
+% determine if this is a new tick and reset the output if it is
+if pLastTimestamp ~= timestamp
+    pLastTimestamp = timestamp;
+    clear = uint8(1);
+end
+
+if numel(pBuffer) + numel(input) < bufferSize+1
+    pBuffer = [pBuffer; input(:)];
+end
+
+buffer = pBuffer(2:end);
+len = uint32(numel(buffer));

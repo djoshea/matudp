@@ -1,0 +1,47 @@
+function [bus, receivedInvalid] = deserializeBusArrayElement(input, index, allowUpdate)
+%#codegen
+
+    in = typecast(input, 'uint8');
+    receivedInvalid = uint8(0);
+    valid = uint8(0);
+
+    % cached output for allowUpdate
+    persistent pBus;
+    
+    % cache outputs so that we only update when allowUpdate is high
+    if isempty(pBus)
+        pBus = {{ initBusFn }}();        
+    end
+    
+    % deserialize a new output if we're allowing updates
+    if allowUpdate
+
+        % length is first uint16
+        N = typecast(in(1:2), 'uint16');
+        if index <= N
+            % followed by N uint32s indicating where each element starts
+            idxOffset = uint32((index-1)*4 + 3); % first offset at byte 3, second at byte 7
+            if idxOffset <= length(in) % too short to hold that many?
+                % get the offset where the requested bus element starts
+                offset = typecast(in(idxOffset : (idxOffset + 3)), 'uint32');
+                if offset <= length(in) % offset invalid?
+
+                    % and deserialize the bus from that offset
+                    [bus, valid] = {{ deserializeBusFn }}(in, offset);
+                    if valid
+                        % cache as new output
+                        pBus = bus;
+                    end
+                end
+            end
+        end
+
+        if ~valid
+            % don't update cache, restore old output
+            receivedInvalid = uint8(1);
+        end
+    end
+
+    bus = pBus;
+end
+

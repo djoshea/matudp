@@ -1,0 +1,40 @@
+function [bus, receivedInvalid] = deserializeWithMemory(bytes)
+%#codegen
+
+    % cache input so we only deserialize when input changes
+    persistent pBytes;
+    if isempty(pBytes)
+        pBytes = bytes;
+        inChanged = uint8(1);
+    elseif ~isequal(pBytes, bytes)
+        pBytes = bytes;
+        inChanged = uint8(1);
+    else
+        inChanged = uint8(0);
+    end
+    
+    persistent pInvalid;
+    if isempty(pInvalid)
+        pInvalid = uint8(0);
+    end
+
+    % external cached output
+    persistent pBusOut;
+    if isempty(pBusOut)
+        pBusOut = {{ initBusFn }}();
+    end
+
+    % handle deserialization if changed
+    if inChanged
+        [tempBus, valid] = {{ deserializeBusFn }}(bytes);
+        if valid
+            pBusOut = tempBus;
+            pInvalid = uint8(0);
+        else
+            pInvalid = uint8(1);
+        end
+    end
+         
+    bus = pBusOut;
+    receivedInvalid = pInvalid;
+end

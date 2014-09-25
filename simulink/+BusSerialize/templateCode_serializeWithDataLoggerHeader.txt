@@ -1,0 +1,8 @@
+function bytes = dataLoggerSerialize(enable, busIn, timestamp)
+%#codegen
+    if enable
+        bytes = {{ serializeBusFn }}(busIn, uint8({{ groupType }}), uint8('{{ groupName }}'), timestamp);
+    else
+        bytes = zeros(0, 1, 'uint8');
+    end
+end

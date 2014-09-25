@@ -1,0 +1,24 @@
+function [value, update] = deserializeParameter(valAsDouble)
+%#codegen
+
+valAsBytes = typecast(valAsDouble, 'uint8');
+
+% check for whether counter has been incremented
+thisCounter = valAsBytes(1);
+persistent pLastCounter;
+if isempty(pLastCounter)
+    pLastCounter = thisCounter;
+end
+if pLastCounter ~= thisCounter
+    update = uint8(1);
+    pLastCounter = thisCounter;
+else
+    update = uint8(0);
+end
+
+% typecast and reshape the value
+if update ~= uint8(0)
+    value = reshape(typecast(valAsBytes({{startByte}}:{{endByte}}), '{{class}}'), {{sizeStr}});
+else
+    value = {{ resetValue }};
+end

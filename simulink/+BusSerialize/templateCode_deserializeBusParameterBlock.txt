@@ -1,0 +1,72 @@
+function [bus, update, receivedInvalid] = deserializeBusParameter(valAsDouble, allowPending)
+%#codegen
+
+    % typecast to bytes
+    valAsBytes = typecast(valAsDouble, 'uint8');
+
+    % use the first byte as updateCounter, check for whether counter has been incremented
+    thisCounter = valAsBytes(1);
+    persistent pLastCounter;
+    if isempty(pLastCounter)
+        pLastCounter = thisCounter;
+    end
+    if pLastCounter ~= thisCounter
+        recvUpdate = uint8(1);
+        pLastCounter = thisCounter;
+    else
+        recvUpdate = uint8(0);
+    end
+    startOffset = 2;
+
+    % external cached output for when allowPending 
+    persistent pBusOut;
+    if isempty(pBusOut)
+        pBusOut = {{ initBusFn }}();
+    end
+
+    % parse incoming bytes if allowing updates
+    receivedInvalid = uint8(0);
+    if allowPending
+        [bus, valid] = {{ deserializeBusFn }}(valAsBytes, startOffset);
+        if valid
+            % update internal cache
+            pBusOut = bus;
+        else
+            % don't update internal cache, output internal cache
+            bus = pBusOut;
+            receivedInvalid = uint8(1);
+            recvUpdate = uint8(0);
+        end
+    else
+        bus = pBusOut;
+    end
+
+    % track whether we have a pending update
+    persistent pPending;
+    if isempty(pPending), pPending = uint8(0); end
+    if recvUpdate
+        if allowPending
+            % update goes out immediately
+            update = uint8(1);
+            pPending = uint8(0);
+        else
+            % queue pending update
+            update = uint8(0);
+            pPending = uint8(1);
+        end
+    else
+        if allowPending
+            % release pending
+            update = pPending;
+            pPending = uint8(0);
+        else
+            % do nothing
+            update = uint8(0);
+        end
+    end
+
+    % reset fields marked with .resetImmediately immediately after update
+    if ~update
+{{ resetImmediatelyCode }}
+    end
+end
