@@ -29,11 +29,11 @@
 #include <time.h>
 
 // DATA LOGGER PARSING HEADERS
-#include "../serializedDataLogger/src/utils.h"
-#include "../serializedDataLogger/src/signal.h"
-#include "../serializedDataLogger/src/writer.h"
-#include "../serializedDataLogger/src/parser.h"
-#include "../serializedDataLogger/src/network.h"
+#include "../data-logger/src/utils.h"
+#include "../data-logger/src/signal.h"
+#include "../data-logger/src/writer.h"
+#include "../data-logger/src/parser.h"
+#include "../data-logger/src/network.h"
 
 ///////////// GLOBALS /////////////
 
