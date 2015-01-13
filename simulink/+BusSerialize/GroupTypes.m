@@ -1,4 +1,4 @@
-classdef GroupTypes < int32
+classdef GroupTypes < Simulink.IntEnumType
     % used to route buses on the data logger receivers
     enumeration
         Control (1) % used to change the data logger state (set metadata, advance trial, etc.)
