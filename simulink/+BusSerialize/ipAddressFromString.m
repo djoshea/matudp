@@ -4,6 +4,7 @@ function vec = ipAddressFromString(ip)
 % Copyright 2009 The MathWorks, Inc.
 
 if isvector(ip) && isnumeric(ip)
+    vec = ip;
     return;
 else
     tokens = regexp(ip, '(\d{1,3}).(\d{1,3}).(\d{1,3}).(\d{1,3})', 'tokens', 'once');
