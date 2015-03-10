@@ -1,4 +1,4 @@
-classdef SignalTypes < int32
+classdef SignalTypes < Simulink.IntEnumType
     enumeration
         Unspecified (0)
         Timestamp (1) % uint32 timestamp in ms

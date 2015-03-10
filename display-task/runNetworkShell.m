@@ -1,0 +1,3 @@
+ns = NetworkShell();
+ns.run();
+
