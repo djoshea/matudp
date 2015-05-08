@@ -10,7 +10,7 @@ function [bus, receivedInvalid] = deserializeWithMemory(bytes, allowUpdate)
     receivedInvalid = uint8(1);
 
     receivedInvalid = uint8(0);
-    if allowUpdate
+    if allowUpdate && ~isempty(bytes)
         [bus, valid] = {{ deserializeBusFn }}(bytes);
         if valid
             % update internal cache
