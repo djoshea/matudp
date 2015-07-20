@@ -1,4 +1,4 @@
-classdef Circle < Oval 
+classdef CircleTarget < OvalTarget
     % Define an circle with a specified radius
     
     properties
@@ -17,8 +17,8 @@ classdef Circle < Oval
     end
     
     methods
-        function obj = Circle(xc, yc, radius)
-            obj = obj@Oval(xc, yc, radius*2, radius*2);
+        function obj = CircleTarget(xc, yc, radius)
+            obj = obj@OvalTarget(xc, yc, radius*2, radius*2);
         end
     end
 end

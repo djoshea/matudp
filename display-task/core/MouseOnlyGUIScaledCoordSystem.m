@@ -9,19 +9,24 @@ classdef MouseOnlyGUIScaledCoordSystem < CoordSystem
     % to xpc and scaled
 
     properties
+        screenIdx
         csFull % original coordinate system to scale
         screenRectFull % cache the window size of the original screen's full rectangle
     end
 
     methods
-        function cs = MouseOnlyGUIScaledCoordSystem(csFull)
-            assert(nargin == 1 && isa(csFull, 'ShiftScaleCoordSystem'), ...
-                'Usage: MouseOnlyGUIScaledCoordSystem(ShiftScaleCoordSystem csFullScreen)');
+        function cs = MouseOnlyGUIScaledCoordSystem(csFull, screenIdx)
+            assert(nargin >= 1 && isa(csFull, 'ShiftScaleCoordSystem'), ...
+                'Usage: MouseOnlyGUIScaledCoordSystem(ShiftScaleCoordSystem, csFullScreen)');
             cs.csFull = csFull;
             % cache the full size of the screen that the original
             % coordinate system is based on
-            [w,h] = Screen('WindowSize', csFull.screenIdx);
+            if nargin < 2
+                screenIdx = csFull.screenIdx;
+            end
+            [w,h] = Screen('WindowSize', screenIdx);
             cs.screenRectFull = [0, 0, w, h];
+            cs.screenIdx = screenIdx;
         end
 
         function scaled = scale(cs, value, rangeOrig, rangeNew) %#ok<INUSL>

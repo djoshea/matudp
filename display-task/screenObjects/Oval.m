@@ -8,7 +8,7 @@ classdef Oval < ScreenObject
         width
         height
         borderColor
-        borderWidth = 1;
+        borderWidth = 0;
         fillColor
         fill = false;
     end
@@ -62,9 +62,6 @@ classdef Oval < ScreenObject
                 borderColor = r.borderColor;
             end
         end
-        
-        
-        
         
         function x1 = get.x1(r)
             x1 = r.xc - r.width/2;

@@ -236,9 +236,12 @@ classdef ScreenDraw < handle
 
             rect = [min(px) min(py) max(px) max(py)];
             
-            Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
+            
             if filled
                 Screen('FillOval', sd.window, sd.convertColor(sd.fillColor), rect);
+            end
+            if sd.penWidth > 0
+                Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
             end
         end
 
@@ -256,7 +259,9 @@ classdef ScreenDraw < handle
                 Screen('FillOval', sd.window, sd.convertColor(sd.fillColor), rect);
             end
             
-            Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
+            if sd.penWidth > 0
+                Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
+            end
         end
 
         % drawGrid(sd, spacing, xc, yc, xLim, yLim);
@@ -475,7 +480,7 @@ classdef ScreenDraw < handle
 
         function set.fontStyle(sd, val)
             sd.fontStyle = val;
-            Screen('TextStyle', sd.window, val);
+            %Screen('TextStyle', sd.window, val);
             sd.charSizeCached = [];
         end
 

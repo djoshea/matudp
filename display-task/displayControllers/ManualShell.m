@@ -8,7 +8,8 @@ classdef ManualShell < DisplayController
     end
 
     methods
-        function ns = ManualShell()
+        function ns = ManualShell(varargin)
+            ns@DisplayController(varargin{:});
             ns.name = 'ManualShell';
             ns.netWorkspace = containers.Map('KeyType', 'char', 'ValueType', 'any');
         end

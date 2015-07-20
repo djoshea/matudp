@@ -1,10 +1,4 @@
 classdef OvalTarget < Oval
-    %
-    %
-    %
-    %
-    %
-    %
     %  Modified from Dan's code on Targets. Inherits class Oval with some basic
     %  properties.
     %
@@ -12,8 +6,10 @@ classdef OvalTarget < Oval
     %
     % CC - 8th April 2012
     properties
-        vibrating
-        vibrateSigma;
+        successful = false;
+        acquired = false;
+        vibrating = false;
+        vibrateSigma = 2;
         xOffset = 0;
         yOffset = 0;
         
@@ -55,13 +51,31 @@ classdef OvalTarget < Oval
                 r.xc, r.yc, r.width, r.height, fillStr, vibrateStr, flyStr);
         end
         
+        function contour(r)
+            r.fill = false;
+        end
+        
         function vibrate(r, sigma)
-            r.vibrateSigma = sigma;
+            if nargin >= 2
+                r.vibrateSigma = sigma;
+            end
             r.vibrating = true;
+        end
+        
+        function fillIn(r)
+            r.fill = true;
         end
         
         function stopVibrating(r)
             r.vibrating = false;
+        end
+        
+        function acquire(r)
+            r.acquired = true;
+        end
+        
+        function success(r)
+            r.successful = true;
         end
         
         function flyAway(r, fromX, fromY)
@@ -69,6 +83,14 @@ classdef OvalTarget < Oval
             r.flyingAway = true;
             r.flyFromX = fromX;
             r.flyFromY = fromY;
+        end
+        
+        function normal(r)
+            r.successful = false;
+            r.fill = true;
+            r.acquired = false;
+            r.flyingAway = false;
+            r.vibrating = false;
         end
         
         function x1 = get.x1o(r)
@@ -117,14 +139,23 @@ classdef OvalTarget < Oval
                 end
             end
         end
+        
         %  Draw Oval Target        
         function draw(r, sd)
             state = sd.saveState();
-            sd.penColor = r.borderColor;
-            sd.fillColor = r.fillColor;
+            if r.successful
+                sd.fillColor = [1 1 1];
+                sd.penColor = [0.5 0.5 0.5];
+            elseif r.acquired
+                sd.fillColor = r.fillColor;
+                sd.penColor = [1 1 1];
+            else
+                sd.penColor = r.borderColor;
+                sd.fillColor = r.fillColor;
+            end
+            
             sd.penWidth = r.borderWidth;
             sd.drawOval(r.x1o, r.y1o, r.x2o, r.y2o, r.fill);
-            
             sd.restoreState(state);
         end
         
