@@ -119,18 +119,18 @@ classdef ScreenDraw < handle
             state.penColor = sd.penColor;
             state.penWidth = sd.penWidth;
             state.fillColor = sd.fillColor;
-            state.fontStyle = sd.fontStyle;
-            state.fontSize = sd.fontSize;
-            state.fontFace = sd.fontFace;
+%             state.fontStyle = sd.fontStyle;
+%             state.fontSize = sd.fontSize;
+%             state.fontFace = sd.fontFace;
         end
 
         function restoreState(sd, state)
             sd.penColor = state.penColor;
             sd.penWidth = state.penWidth;
             sd.fillColor = state.fillColor;
-            sd.fontStyle = state.fontStyle;
-            sd.fontSize = state.fontSize;
-            sd.fontFace = state.fontFace;
+%             sd.fontStyle = state.fontStyle;
+%             sd.fontSize = state.fontSize;
+%             sd.fontFace = state.fontFace;
         end
         
         function color = convertColor(sd, value)
@@ -315,6 +315,9 @@ classdef ScreenDraw < handle
 %             px = makerow(sd.toPx(xpts));
 %             py = makerow(sd.toPy(ypts));
             
+            px = makerow(px);
+            py = makerow(py);
+
             nPts = numel(px);
             pts = nan(2, nPts*2);
             pts(1, 1:2:end) = px;

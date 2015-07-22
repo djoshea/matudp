@@ -24,7 +24,7 @@ ny = numel(y);
 
 pxShift = (px - minX)/spacing;
 pyShift = (py - minY)/spacing;
-im = poly2mask(pxShift, pyShift, ny, nx);
+im = flipud(poly2mask(pxShift, pyShift, ny, nx));
 
 
 end

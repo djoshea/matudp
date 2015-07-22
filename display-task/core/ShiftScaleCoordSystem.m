@@ -14,8 +14,8 @@ classdef ShiftScaleCoordSystem < CoordSystem
     methods(Static)
         function cs = buildCenteredForScreenSize(displayNumber, varargin)
             p = inputParser();
-            p.addParameter('pixelPitch', [], @(x) isempty(x) || isscalar(x)); % pixel pitch in mm
-            p.addParameter('units', 'mm', @ischar);
+            p.addParamValue('pixelPitch', [], @(x) isempty(x) || isscalar(x) || numel(x) == 2); % pixel pitch in mm
+            p.addParamValue('units', 'mm', @ischar);
             p.parse(varargin{:});
             
             if nargin < 1
@@ -31,8 +31,10 @@ classdef ShiftScaleCoordSystem < CoordSystem
             cs.py0 = floor(pixH/2);
             
             if ~isempty(p.Results.pixelPitch)
-                cs.uxPerPx = p.Results.pixelPitch;
-                cs.uyPerPy = p.Results.pixelPitch;
+                pixelPitch = p.Results.pixelPitch;
+                if isscalar(pixelPitch), pixelPitch(2) = pixelPitch; end
+                cs.uxPerPx = pixelPitch(1);
+                cs.uyPerPy = pixelPitch(2);
             else
                 % ask OS for physical display size
                 [mmW, mmH] = Screen('DisplaySize', displayNumber);

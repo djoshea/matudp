@@ -134,7 +134,9 @@ classdef DisplayController < handle
                 assert(isa(task, 'DisplayTask'), 'Task must be a DisplayTask instance');
                 
                 % clear everything out of ScreenObjectManager
-                dc.mgr.flush();
+                if ~isempty(dc.mgr)
+                    dc.mgr.flush();
+                end
                 
                 % cleanup old task
                 if ~isempty(dc.task)
