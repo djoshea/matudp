@@ -136,7 +136,7 @@ classdef RectangleGradientTarget < ScreenObject
                 % using DrawTexture
                 [im, X, Y] = buildRectangleGradientImage('theta', 0, ...
                     'width', r.width, 'depth', r.depth, 'spacing', 0.5); 
-                im = flipud(im);
+%                 im = flipud(im);
 
                 % normal: darker green (actually same bright green)
                 normalImage = zeros([size(im) 4]);

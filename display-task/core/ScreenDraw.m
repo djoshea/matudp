@@ -363,7 +363,7 @@ classdef ScreenDraw < handle
             rect = [min(px) min(py) max(px) max(py)];
             % Make a texture from this image
             % convert angle provided in radians to degrees
-            Screen('DrawTexture', sd.window, textureIndex, [], rect, -angle*180/pi, ...
+            Screen('DrawTexture', sd.window, textureIndex, [], rect, angle*180/pi, ...
                 filterMode, globalAlpha, modulateColor);
         end
         
