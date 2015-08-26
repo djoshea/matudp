@@ -26,3 +26,17 @@
 *.exe
 *.out
 *.app
+
+# Matlab specific
+*.autosave
+*.asv
+*.xml
+xpcnetboot.bat
+.DS_Store
+*~
+splrj
+*.mexw64
+slrtnetboot.bat
+*_rtw
+*.mexw64
+*.mexa64
