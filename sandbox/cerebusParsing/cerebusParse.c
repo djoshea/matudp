@@ -1,9 +1,66 @@
+#include <stddef.h>
+#include <stdlib.h>
+#include "simstruc.h"
+
+#ifndef MATLAB_MEX_FILE
+#include <windows.h>
+#include "xpctarget.h"
+#endif
+
+#ifdef MATLAB_MEX_FILE
+#include "mex.h"
+#endif
+
+#include "nblib.h"
+#include "utilities.c"
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "cerebusParse.h"
+#include "nblib.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+
+/// xPC Networking utilities
+// 
+// // returns NULL on error
+// cbPKT_GENERIC* cb_nbExtractPacketData(UINT32_T* nbInput, UINT32_T* pDataLen) {
+//    // Get Buffer
+//    xpcNBError error;
+//    xpcNB* nb = (xpcNB*)nbInput;
+//    INT32_T len;
+//    cbPKT_GENERIC* pp;
+// 
+//    // Accept Buffer
+//    if ( error = xpcNBAccept(nb) ) 
+//    {
+//       fprintf(stderr, "CerebusParse: Network Buffer Extract Accept Error %d", error);
+//       return NULL;
+//    }
+// 
+//    len = xpcNBBytes(nb);
+//    if ( len < 0 ) len = 0;
+// 
+//    pp = (cbPKT_GENERIC*)xpcNBData(nb);
+//    *pDataLen = len;
+//    
+//    return pp;
+// }
+// 
+// // returns true on error
+// bool cb_nbFree(UINT32_T* nbInput)
+// {
+//     xpcNB* nb = (xpcNB*)nbInput;
+//     xpcNBError error;
+//     // Free Buffer
+//     if ( error = xpcNBFree(nb) ) {
+//        fprintf(stderr, "CerebusParse: Network Buffer Extract Free Error %d", error);
+//        return true;
+//     }
+//     return false;
+// }
 
 cbPKT_GENERIC* cb_getPointer(cbPKT_GENERIC* pp)
 {

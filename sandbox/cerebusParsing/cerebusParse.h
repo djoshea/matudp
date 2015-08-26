@@ -83,7 +83,9 @@ typedef struct {
 #define cbPKTDLEN_SPK   ((sizeof(cbPKT_SPK)/4)-2)
 #define cbPKTDLEN_SPKSHORT (cbPKTDLEN_SPK - ((sizeof(INT16)*cbMAX_PNTS)/4))
 
-double foo(double in1, double in2);
+// Replacements for NB Extract block
+cbPKT_GENERIC* cb_nbExtractPacketData(uint32_T* nbInput, uint32_T* pDataLen);
+bool cb_nbFree(uint32_T* nbInput);
 
 UINT32_T cb_getTime(cbPKT_GENERIC* pp);
 UINT16_T cb_getChannel(cbPKT_GENERIC* pp);
