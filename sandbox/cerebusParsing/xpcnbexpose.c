@@ -26,20 +26,16 @@
 #include "mex.h"
 #endif
 
-
 #include "nblib.h"
-
 
 typedef enum {
    S_LENGTH = 0,
    NUM_S_PARAMS
 } s_params;
 
-
 static char_T     msg[256];
 static int_T      j;
 static xpcNBError error;
-
 
 static void mdlInitializeSizes(SimStruct *S)
 {

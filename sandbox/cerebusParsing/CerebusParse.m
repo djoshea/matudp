@@ -129,6 +129,23 @@ classdef CerebusParse < coder.ExternalDependency
             t = coder.ceval('cb_getTime', pp);
         end
         
+        function msOffset = computeTimeOffsetMs(cb_time, localClock, localRef, cbRef)
+            % cb_time is cerebus timestamp on 30 kHz clock
+            % localClock is the current local time (ms)
+            % localRef and cbRef are saved local (ms) and cerebus (30 kHz)
+            % clocks that have been deemed to have occurred at the same
+            % actual time and thereby serve as the reference for alignment.
+            if ~isnan(localRef) && ~isnan(cbRef)
+                % compute timestamp offset from current ms
+                deltaLocalMs = single(localClock) - single(localref);
+                deltaCerebusMs = (single(cb_time) - single(cbRef)) / single(30);
+                msOffset = single(deltaCerebusMs - deltaLocalMs);
+            else
+                % otherwise assume no offset, no references available
+                msOffset = single(0);
+            end
+        end
+        
         % returns uint16
         function c = getChannel(pp)
             coder.cinclude('cerebusParse.h');
