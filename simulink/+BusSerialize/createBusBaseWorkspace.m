@@ -1,5 +1,10 @@
-function [bus, vals, busSpec] = createBusBaseWorkspace(busName, valueStruct)
+function [bus, vals, busSpec] = createBusBaseWorkspace(busName, valueStruct, varargin)
     import BusSerialize.SignalSpec;
+    
+    p = inputParser();
+    p.addParamValue('headerFile', '', @ischar);
+    p.parse(varargin{:});
+    headerFile = p.Results.headerFile;
     
     fields = fieldnames(valueStruct);
     nFields = numel(fields);
@@ -7,6 +12,12 @@ function [bus, vals, busSpec] = createBusBaseWorkspace(busName, valueStruct)
     % create bus object
     bus = Simulink.Bus();
     vals = struct();
+    
+    % require that the definition go in a specific named header file
+    if ~isempty(headerFile)
+        bus.DataScope = 'Exported';
+        bus.HeaderFile = headerFile;
+    end
     
     % create BusSpec object 
     busSpec = BusSerialize.BusSpec(busName);
