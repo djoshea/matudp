@@ -6,12 +6,12 @@ typedef struct {
   real32_T spikeTimeOffsets[96];
   uint8_T spikeChannels[96];
   uint8_T spikeUnits[96];
-  int16_T spikeWaveforms[6144];
+  int16_T spikeWaveforms[4608];
 } SpikeDataBus;
 
 typedef struct {
   real32_T continuousTimeOffsets[96];
-  int16_T continuousData[7680];
+  int16_T continuousData[5760];
 } ContinuousDataBus;
 
 typedef struct {
@@ -25,6 +25,8 @@ typedef struct {
   int16_T mostRecentContinuousSamples[96];
   uint32_T cerebusClock;
   real32_T clockOffset;
+  uint32_T cerebusClockRef;
+  uint32_T localClockRef;
 } CerebusStatisticsBus;
 
 #endif                                 /* RTW_HEADER_CerebusBuses_h_ */
