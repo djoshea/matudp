@@ -9,10 +9,13 @@ nST = numel(saveTags);
 prog = ProgressBar(nST, 'Loading Save Tags %s', strjoin(saveTags, ','));
 [Rc, metac] = deal(cell(nST));
 for iST = 1:nST
-    [Rc{iST}, metac{iST}] = MatUdp.DataLoadEnv.loadSaveTagRaw(varargin{:}, 'saveTag', saveTags(iST));
+    prog.update(iST);
+    [Rc{iST}, metac{iST}] = MatUdp.DataLoadEnv.loadSaveTagRaw(varargin{:}, ...
+        'saveTag', saveTags(iST));
 end
+prog.finish();
 
 R = structcat(cat(1, Rc{:}));
-meta = structcat(cat(1, metaC{:}));
+meta = structcat(cat(1, metac{:}));
 
 end

@@ -1,5 +1,9 @@
-function [trials, meta] = loadAllTrialsInDirectoryRaw(folder, maxTrials)
+function [trials, meta] = loadAllTrialsInDirectoryRaw(folder, varargin)
 % returns all trials and meta files as cell arrays
+    p = inputParser();
+    p.addParameter('maxTrials', Inf, @isscalar); % stop after max trials
+    p.parse(varargin{:});
+    maxTrials = p.Results.maxTrials;
 
     if ~exist(folder, 'dir')
         error('Folder %s does not exist', folder);
@@ -23,9 +27,9 @@ function [trials, meta] = loadAllTrialsInDirectoryRaw(folder, maxTrials)
         prog.update(i);
         d = load(fullfile(folder,names{i}), 'trial', 'meta');
         if ~isempty(d) && isfield(d, 'trial') && isfield(d, 'meta')
-            data{i} = d.trial;
-            meta{i} = d.meta;
-            valid(i) = true;
+            
+            % strip groups
+            [data{i}, meta{i}] = deal(d.trial, d.meta);
         end
     end
     prog.finish();
@@ -33,4 +37,3 @@ function [trials, meta] = loadAllTrialsInDirectoryRaw(folder, maxTrials)
     trials = data(valid);
         
 end
-

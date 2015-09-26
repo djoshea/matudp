@@ -3,6 +3,7 @@ function [R, meta] = loadSaveTagRaw(folder, saveTag, varargin)
 p = inputParser();
 p.addParameter('maxTrials', Inf, @isscalar);
 p.addParameter('minDuration', 50, @isscalar);
+p.Unmatched = true;
 p.parse(varargin{:});
 maxTrials = p.Results.maxTrials;
 
@@ -10,7 +11,8 @@ nST = numel(saveTag);
 [trialsC, metaByTrialC] = deal(cell(nST, 1));
 for iST = 1:nST
     folderSaveTag = fullfile(folder, sprintf('saveTag%03d', saveTag(iST)));
-    [trialsC{iST}, metaByTrialC{iST}] = MatUdp.DataLoad.loadAllTrialsInDirectoryRaw(folderSaveTag, maxTrials);
+    [trialsC{iST}, metaByTrialC{iST}] = MatUdp.DataLoad.loadAllTrialsInDirectoryRaw(folderSaveTag, ...
+        'maxTrials', maxTrials, p.Unmatched);
 end
 
 %debug('Concatenating trial data...\n');
