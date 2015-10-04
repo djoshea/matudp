@@ -4,7 +4,7 @@ function [td] = loadSaveTagTrialData(varargin)
 
 %debug('Building TrialData...\n');
 if ~exist('tdi', 'var')
-    tdi = MatUdpTrialDataInterfaceV6(R, meta);
+    tdi = MatUdpTrialDataInterfaceV7(R, meta);
 end
 
 td = TrialData(tdi);
