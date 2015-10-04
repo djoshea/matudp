@@ -4,9 +4,11 @@ classdef Photobox < Circle
         photoboxId % unique identifier for this photobox's position
         status % 0 == off, 1 == on
         flashStatus
-
+        
         % every other frame the intensity is slightly toggled,
         % regardless of whether the photobox is on or off
+        oscillateEachFrame = true;
+
         frameEven = false;
     end
 
@@ -20,11 +22,13 @@ classdef Photobox < Circle
     end
     
     methods
-        function r = Photobox(photoboxId)
+        function r = Photobox(cxt, photoboxId)
             if nargin < 1
+                error('Usage: photobox(DisplayContext)');
+            end
+            if nargin < 2
                 photoboxId = 1;
             end
-            cxt = getDisplayContext();
 
             if isempty(cxt.photoboxPositions) || length(cxt.photoboxPositions) < photoboxId
                 xc = 0;
@@ -41,7 +45,7 @@ classdef Photobox < Circle
             r.photoboxId = photoboxId;
 
             r.fill = true;
-            r.borderWidth = 1;
+            r.borderWidth = 0;
             r.hide();
         
             r.status = r.OFF;
@@ -95,17 +99,17 @@ classdef Photobox < Circle
             end
 
             if r.status == r.ON
-%                if r.frameEven
-                    r.fillColor = sd.white;
-%                else
-%                    r.fillColor = sd.black + 0.65 * (sd.white - sd.black);
-%                end
+                if r.frameEven || ~r.oscillateEachFrame
+                    r.fillColor = [1 1 1];
+                else
+                    r.fillColor = [0.9 0.9 0.9];
+                end
             else
-%                if r.frameEven
-%                    r.fillColor = sd.black + 0.35 * (sd.white - sd.black);
-%                else
-                    r.fillColor = sd.black;
-%                end
+                 if r.frameEven && r.oscillateEachFrame
+                     r.fillColor = [0.2 0.2 0.2];
+                 else
+                    r.fillColor = [0 0 0];
+                 end
             end
 
             r.frameEven = ~r.frameEven;

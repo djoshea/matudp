@@ -103,8 +103,7 @@ classdef PolygonObstacle < ScreenObject
             if r.pendingUpdateTexture && ~isempty(r.pointsX) && ~isempty(r.pointsY)
                 % build polygon mask image
                 [im, X, Y] = buildObstaclePolygonImage(r.pointsX, r.pointsY);
-
-                im = flipud(im);
+                %im = flipud(im);
                 
                 % normal image: default to dark red
                 if isempty(r.fillColorCollision)

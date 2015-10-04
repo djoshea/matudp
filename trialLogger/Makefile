@@ -72,7 +72,7 @@ C_FILES=$(wildcard $(SRC_DIR)/*.c)
 O_FILES=$(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(C_FILES))
 
 # final output
-EXECUTABLE=$(BIN_DIR)/signalLogger
+EXECUTABLE=$(BIN_DIR)/trialLogger
 
 # debugging, use make print-VARNAME to see value
 print-%:

@@ -119,18 +119,18 @@ classdef ScreenDraw < handle
             state.penColor = sd.penColor;
             state.penWidth = sd.penWidth;
             state.fillColor = sd.fillColor;
-            state.fontStyle = sd.fontStyle;
-            state.fontSize = sd.fontSize;
-            state.fontFace = sd.fontFace;
+%             state.fontStyle = sd.fontStyle;
+%             state.fontSize = sd.fontSize;
+%             state.fontFace = sd.fontFace;
         end
 
         function restoreState(sd, state)
             sd.penColor = state.penColor;
             sd.penWidth = state.penWidth;
             sd.fillColor = state.fillColor;
-            sd.fontStyle = state.fontStyle;
-            sd.fontSize = state.fontSize;
-            sd.fontFace = state.fontFace;
+%             sd.fontStyle = state.fontStyle;
+%             sd.fontSize = state.fontSize;
+%             sd.fontFace = state.fontFace;
         end
         
         function color = convertColor(sd, value)
@@ -236,9 +236,12 @@ classdef ScreenDraw < handle
 
             rect = [min(px) min(py) max(px) max(py)];
             
-            Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
+            
             if filled
                 Screen('FillOval', sd.window, sd.convertColor(sd.fillColor), rect);
+            end
+            if sd.penWidth > 0
+                Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
             end
         end
 
@@ -256,7 +259,9 @@ classdef ScreenDraw < handle
                 Screen('FillOval', sd.window, sd.convertColor(sd.fillColor), rect);
             end
             
-            Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
+            if sd.penWidth > 0
+                Screen('FrameOval', sd.window, sd.convertColor(sd.penColor), rect, sd.penWidth);
+            end
         end
 
         % drawGrid(sd, spacing, xc, yc, xLim, yLim);
@@ -310,6 +315,9 @@ classdef ScreenDraw < handle
 %             px = makerow(sd.toPx(xpts));
 %             py = makerow(sd.toPy(ypts));
             
+            px = makerow(px);
+            py = makerow(py);
+
             nPts = numel(px);
             pts = nan(2, nPts*2);
             pts(1, 1:2:end) = px;
@@ -355,7 +363,7 @@ classdef ScreenDraw < handle
             rect = [min(px) min(py) max(px) max(py)];
             % Make a texture from this image
             % convert angle provided in radians to degrees
-            Screen('DrawTexture', sd.window, textureIndex, [], rect, -angle*180/pi, ...
+            Screen('DrawTexture', sd.window, textureIndex, [], rect, angle*180/pi, ...
                 filterMode, globalAlpha, modulateColor);
         end
         
@@ -475,7 +483,7 @@ classdef ScreenDraw < handle
 
         function set.fontStyle(sd, val)
             sd.fontStyle = val;
-            Screen('TextStyle', sd.window, val);
+            %Screen('TextStyle', sd.window, val);
             sd.charSizeCached = [];
         end
 

@@ -21,6 +21,8 @@ else
     end
 end
 
+fprintf('Pixel pitch is [%g w, %g h]\n', pixelPitch(1), pixelPitch(2));
+
 % For an explanation of the try-catch block, see the section "Error Handling"
 % at the end of this document.
 try

@@ -59,7 +59,7 @@ BUILD_DIR=build
 BUILD_DIR_EXTERN=build/extern
 
 # lists of h, cc, and o files
-SERIALIZER_SRC_DIR=../data-logger/src
+SERIALIZER_SRC_DIR=../trialLogger/src
 SERIALIZER_SRC_FILES=writer network parser trie signal utils
 C_FILES_EXTERN=$(addprefix $(SERIALIZER_SRC_DIR)/, $(addsuffix .c, $(SERIALIZER_SRC_FILES)))
 H_FILES_EXTERN=$(addprefix $(SERIALIZER_SRC_DIR)/, $(addsuffix .h, $(SERIALIZER_SRC_FILES)))

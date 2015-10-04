@@ -133,6 +133,11 @@ classdef DisplayController < handle
             if newTask
                 assert(isa(task, 'DisplayTask'), 'Task must be a DisplayTask instance');
                 
+                % clear everything out of ScreenObjectManager
+                if ~isempty(dc.mgr)
+                    dc.mgr.flush();
+                end
+                
                 % cleanup old task
                 if ~isempty(dc.task)
                     dc.task.cleanup();
@@ -168,7 +173,6 @@ classdef DisplayController < handle
                 dc.com.close();
             end
             dc.cleanup();
-            
         end
 
         function preRun(dc)
@@ -283,13 +287,14 @@ classdef DisplayController < handle
         end
 
         function abort = checkAbort(dc)
-            % in full screen mode, abort on keypress
-            % in partial screen mode, abort on window close
-            if dc.cxt.useFullScreen
-                abort = KbCheck;
-            else
-                abort = false;
-            end
+            % abort on escape
+            [~, ~, keyCodes] = KbCheck;
+            abort = keyCodes(KbName('escape'));             
+%             if dc.cxt.useFullScreen
+%                 abort = KbCheck;
+%             else
+%                 abort = false;
+%             end
         end
     end
     

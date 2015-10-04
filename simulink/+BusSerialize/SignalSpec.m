@@ -394,6 +394,10 @@ classdef SignalSpec < handle
             sv = BusSerialize.SignalSpec.AnalogEnum(enumName, 'isVariableByDim', true, 'maxSize', maxLen, varargin{:});
         end
         
+        function sv = EventEnumQueueVariable(eventEnumName, maxLen, varargin)
+            sv = BusSerialize.SignalSpec.AnalogEnumVectorVariable(eventEnumName, maxLen, varargin{:});
+        end
+        
         function sv = AnalogBoolean(value, varargin)
             % okay to pass logical type into param as well
             value = logical(value);

@@ -3,7 +3,7 @@ classdef CursorRound < Circle
     properties
         size;
         sizeTouching = 10;
-        penWidthTouching = 1;
+        penWidthTouching = 0;
 
         sizeNotTouching = 10;
 
@@ -79,7 +79,7 @@ classdef CursorRound < Circle
             
             if r.seen
                 r.fillColor = sd.white;
-                r.borderColor = sd.black;
+                r.borderColor = sd.white;
             else
                 r.fillColor = sd.red;
                 r.borderColor = sd.red;

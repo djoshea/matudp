@@ -32,5 +32,4 @@ classdef ScreenObject < handle & matlab.mixin.Heterogeneous
         % use the ScreenDraw object to draw this object onto the screen
         draw(obj, sd);
     end
-
 end
