@@ -40,3 +40,5 @@ slrtnetboot.bat
 *_rtw
 *.mexw64
 *.mexa64
+
+._*

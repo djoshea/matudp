@@ -1,4 +1,4 @@
-function [R, meta] = loadSaveTagRaw(varargin)
+function [R, meta, loadInfo] = loadSaveTagRaw(varargin)
 % see MatUdp.DataLoadEnv.buildPathToSaveTag for path specification
 % parameters
 
@@ -34,4 +34,3 @@ mask = [R.duration] > p.Results.minDuration;
 %debug('Filtering %d trials with duration < %d\n', nnz(~mask), p.Results.minDuration);
 R = R(mask);
 meta = meta(mask);
-
