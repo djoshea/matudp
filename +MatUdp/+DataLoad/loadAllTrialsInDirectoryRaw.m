@@ -30,10 +30,13 @@ function [trials, meta] = loadAllTrialsInDirectoryRaw(folder, varargin)
             
             % strip groups
             [data{i}, meta{i}] = deal(d.trial, d.meta);
+            valid(i) = true;
         end
     end
     prog.finish();
 
     trials = data(valid);
+    meta = meta(valid);
+    
         
 end

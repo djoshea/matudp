@@ -3,7 +3,7 @@ function [R, meta] = loadSaveTagRaw(folder, saveTag, varargin)
 p = inputParser();
 p.addParameter('maxTrials', Inf, @isscalar);
 p.addParameter('minDuration', 50, @isscalar);
-p.Unmatched = true;
+p.KeepUnmatched = true;
 p.parse(varargin{:});
 maxTrials = p.Results.maxTrials;
 
