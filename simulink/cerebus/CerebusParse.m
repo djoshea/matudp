@@ -112,10 +112,18 @@ classdef CerebusParse < coder.ExternalDependency
             % localRef and cbRef are saved local (ms) and cerebus (30 kHz)
             % clocks that have been deemed to have occurred at the same
             % actual time and thereby serve as the reference for alignment.
-            if ~isnan(localRef) && ~isnan(cbRef)
-                % compute timestamp offset from current ms
-                deltaLocalMs = single(localClock) - single(localRef);
-                deltaCerebusMs = (single(cb_time) - single(cbRef)) / single(30);
+            %
+            % localRef is the local clock that was true for the tick on
+            % which the cb packet was processed. cbRef is the cerebus clock
+            % on the first packet from that tick. This means that really,
+            % cbRef is the timestamp associated with localRef - 1 since it
+            % was received on the prior tick and processed on this one.
+            if localRef > 0 && cbRef > 0
+                % compute timestamp offset of current time to the reference
+                % see note above about localRef - 1
+                deltaLocalMs = double(localClock) - double(localRef) - 1.0;
+                
+                deltaCerebusMs = (double(cb_time) - double(cbRef)) / double(30);
                 msOffset = single(deltaCerebusMs - deltaLocalMs);
             else
                 % otherwise assume no offset, no references available

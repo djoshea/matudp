@@ -24,6 +24,8 @@ s.nContinuousSamples =  SignalSpec.Param(uint32(0), 'samples');
 s.mostRecentContinuousSamples =  SignalSpec.Analog(zeros(CerebusInfo.MaxChannels, 1, 'int16'), 'mV');
 s.cerebusClock = BusSerialize.SignalSpec.Param(uint32(0), 'ms/30');
 s.clockOffset = BusSerialize.SignalSpec.TimestampOffset(single(0));
+s.cerebusClockRef = BusSerialize.SignalSpec.Param(uint32(0), 'ms/30');
+s.localClockRef = BusSerialize.SignalSpec.Param(uint32(0), 'ms');
 BusSerialize.createBusBaseWorkspace('CerebusStatisticsBus', s, 'headerFile', cerebusHeaderFile);
 clear s;
 
