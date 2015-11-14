@@ -8,4 +8,6 @@ end
 for i = 1:numel(enumNames)
     BusSerialize.writeEnumToStringCode(enumNames{i});
     BusSerialize.writeStringToEnumCode(enumNames{i});
+    BusSerialize.writeEnumVectorToSemicolonDelimitedStringCode(enumNames{i});
+    BusSerialize.writeSemicolonDelimitedStringToEnumVectorCode(enumNames{i});
 end
