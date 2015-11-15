@@ -11,7 +11,7 @@ function writeDeserializeBusCode(busName, varargin)
 %
 
     p = inputParser();
-    p.addParamValue('forMatlab', false, @islogical);
+    p.addParameter('forMatlab', false, @islogical);
     p.parse(varargin{:});
     forMatlab = p.Results.forMatlab;
 
@@ -59,12 +59,6 @@ function writeDeserializeBusCode(busName, varargin)
 
         % compute total number of elements
         numElements = prod(e.Dimensions);
-
-        if signalSpec.isEnum
-            if numElements~= 1
-                a = 1;
-            end
-        end
         
         % compute string to use for dimensions
         dims = e.Dimensions;
@@ -265,18 +259,18 @@ function writeDeserializeBusCode(busName, varargin)
                 %enumStrMaxSize = max(cellfun(@numel, fieldnames(enumStruct)));
                 tempEnumVecName = sprintf('tempVar_%s', e.Name);
                 w('                coder.varsize(''%s'', %d);\n', tempEnumVecName, prod(dims));
-                w('                %s = repmat(%s.%s, %s);\n', tempEnumVecName, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString(), dimsStr);
+                w('                %s = repmat(%s.%s, %s); %% initialize enum to size with default\n', tempEnumVecName, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString(), dimsStr);
                 w('                [%s, nValues, valueValid] = %s(typecast(in(offset:offset+uint32(elements*%d - 1))'', ''uint8'')'',%s);\n', tempEnumVecName, enumFnName, bytesPerElement, tempEnumVecName);
                 
                 if isVariable
-                    w('                if nValues < %d\n', prod(dims))
+                    w('                if nValues <= %d && valueValid\n', prod(dims))
                     w('                    bus.%s = %s(uint32(1):nValues);\n', e.Name, tempEnumVecName);
-                    w('                end\n');
+                    w('                else\n');
                 else
                     w('                bus.%s = repmat(%s.%s, %s);\n', e.Name, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString(), dimsStr);
-                    w('                if nValues < %d\n', prod(dims))
+                    w('                if nValues <= %d && valueValid\n', prod(dims))
                     w('                    bus.%s(uint32(1):nValues) = %s(uint32(1):nValues);\n', e.Name, tempEnumVecName);
-                    w('                end\n');
+                    w('                else\n');
                 end 
                 
                 % the double transpose shenanigans are a workaround for a
@@ -288,12 +282,13 @@ function writeDeserializeBusCode(busName, varargin)
                 if forMatlab
                     % if enum value isn't valid, just leave it as char
                     % rather than using the default value
-                    w('                if ~valueValid %% unknown enum value, leaving as char only for Matlab\n');
+                    w('                    %% unknown enum value, leaving as char only for Matlab\n');
                     w('                    bus.%s = typecast(in(offset:offset+uint32(elements*%d - 1)), ''char'');\n', e.Name, bytesPerElement);
-                    w('                end\n');
                 else
-                    w('                if ~valueValid, valid = uint8(0); end\n'); 
+                    w('                    valid = uint8(0);\n'); 
                 end
+                w('                end\n');
+                
             else
                 if forMatlab
                     % convert char / logical back to original class

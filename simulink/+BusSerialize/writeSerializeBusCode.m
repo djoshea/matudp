@@ -10,7 +10,7 @@ function writeSerializeBusCode(busName, varargin)
 % udpMexReceiver to match the new format.
 
     p = inputParser();
-    p.addParamValue('includeDataLoggerHeader', false, @islogical);
+    p.addParameter('includeDataLoggerHeader', false, @islogical);
     p.parse(varargin{:});
     
     includeDataLoggerHeader = p.Results.includeDataLoggerHeader;
@@ -36,7 +36,7 @@ function writeSerializeBusCode(busName, varargin)
     end
     
     elements = busObject.Elements;
-    [maxBufferLen, isVariable] = BusSerialize.computeMaxSerializedBusLength(busName);
+    [maxBufferLen, isVariable, extraBytesPerNamePrefixCharacter] = BusSerialize.computeMaxSerializedBusLength(busName);
     
     if includeDataLoggerHeader
         w('function [out, valid] = %s(bus, groupType, groupName, timestamp, namePrefix)\n', fnName);
@@ -65,9 +65,9 @@ function writeSerializeBusCode(busName, varargin)
         % use coder.varsize to establish an upper bound on the output
         if includeDataLoggerHeader
             % include header length (fixed) in max size
-            w('    coder.varsize(''out'', %d + headerLength);\n', maxBufferLen);
+            w('    coder.varsize(''out'', %d + %d*numel(namePrefix) + headerLength);\n', maxBufferLen, extraBytesPerNamePrefixCharacter);
         else
-            w('    coder.varsize(''out'', %d);\n', maxBufferLen);
+            w('    coder.varsize(''out'', %d + %d*numel(namePrefix));\n', maxBufferLen, extraBytesPerNamePrefixCharacter);
         end
     end
     
@@ -75,8 +75,10 @@ function writeSerializeBusCode(busName, varargin)
     lenFnName = BusSerialize.getGeneratedCodeFunctionName(sprintf('getSerializedBusLength_%s', busName));
     if includeDataLoggerHeader
         w('    outSize = headerLength + %s(bus, namePrefix);\n', lenFnName);
+        w('    assert(outSize <= headerLength + %d + %d*numel(namePrefix));\n', maxBufferLen, extraBytesPerNamePrefixCharacter);
     else
         w('    outSize = %s(bus, namePrefix);\n', lenFnName);
+        w('    assert(outSize <= %d + %d*numel(namePrefix));\n', maxBufferLen, extraBytesPerNamePrefixCharacter);
     end
     
     % declare the output buffer to this size
