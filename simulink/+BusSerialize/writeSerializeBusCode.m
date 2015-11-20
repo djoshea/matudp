@@ -219,7 +219,11 @@ function writeSerializeBusCode(busName, varargin)
                 enumStrVarName = sprintf('enumAsStr_%s', e.Name);
                 
                 w('    %% converting enum type %s to string\n', signalSpec.enumName);
-                w('    coder.varsize(''%s'', %d);\n', enumStrVarName, enumStrMaxSize);
+                if prod(e.Dimensions) == 1
+                    w('    coder.varsize(''%s'', %d);\n', enumStrVarName, enumStrMaxSize); 
+                else
+                    w('    coder.varsize(''%s'', (%d+1)*%d - 1); %% create enough room for the max number of strings plus semicolons\n', enumStrVarName, enumStrMaxSize, prod(e.Dimensions)); 
+                end
                 
                 % loop over elements of the signal and concatenate the string versions of each enum value with ;
                 w('    %s = zeros(0, 1, ''uint8'');\n', enumStrVarName);

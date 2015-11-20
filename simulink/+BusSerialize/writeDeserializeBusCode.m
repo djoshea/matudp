@@ -195,7 +195,8 @@ function writeDeserializeBusCode(busName, varargin)
             w('            %% assigning empty value\n');
             if signalSpec.isEnum
                 if isVariable
-                    w('            bus.%s = %s.empty(%s);\n', e.Name, signalSpec.enumName, mat2str(dimsForEmpty));
+                    w('            %s_tempEnumVec = %s.%s;\n', e.Name, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString());
+                    w('            bus.%s = %s_tempEnumVec([], 1);\n', e.Name, e.Name);
                 else
                     w('            bus.%s = repmat(%s.%s, %s);\n', e.Name, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString(), dimsStr);
                 end
@@ -225,7 +226,8 @@ function writeDeserializeBusCode(busName, varargin)
             % pre-initialize value
             if signalSpec.isEnum
                  if isVariable
-                    w('            bus.%s = %s.empty(%s);\n', e.Name, signalSpec.enumName, mat2str(dimsForEmpty));
+                    w('            %s_tempEnumVec = %s.%s;\n', e.Name, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString());
+                    w('            bus.%s = %s_tempEnumVec([], 1);\n', e.Name, e.Name);
                 else
                     w('            bus.%s = repmat(%s.%s, %s);\n', e.Name, signalSpec.enumName, signalSpec.getEnumDefaultValueAsString(), dimsStr);
                 end

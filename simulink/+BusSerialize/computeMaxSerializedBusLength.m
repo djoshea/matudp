@@ -55,7 +55,11 @@ for i = 1:numel(elements)
             % reserve space for the longest string
             members = fieldnames(BusSerialize.getEnumAsValueStruct(signalSpec.enumName));
             lens = cellfun(@numel, members);
-            maxLen = maxLen + max(lens) * prod(e.Dimensions);
+            if prod(e.Dimensions) == 1
+                maxLen = maxLen + max(lens);
+            else
+                maxLen = maxLen + (max(lens)+1)*prod(e.Dimensions) - 1; % save room for n-1 semicolons
+            end
         else
             % reserve space for the largest size 
             bytesPerElement = numel(typecast(cast(1, e.DataType), 'uint8'));
