@@ -10,9 +10,10 @@ end
 [busObject, busSpec] = BusSerialize.getBusFromBusName(busName);
 
 if isempty(busObject)
-    warning('Bus %s does not exist', busName);
+    error('Bus %s does not exist', busName);
     maxLen = 0;
     isVariable = false;
+    extraBytesPerNamePrefixCharacter = 0;
     return;
 end
 
