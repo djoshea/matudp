@@ -23,6 +23,8 @@ function folder = buildPathToSubjectRoot(varargin)
         assert(~isempty(p.Results.subject), 'Either subject must be specified or MATUDP_SUBJECT must be set');
         assert(isempty(p.Results.dataStoreRoot) && isempty(p.Results.subjectRoot), msg);
     	folder  = fullfile(p.Results.dataRoot, p.Results.dataStore, p.Results.subject);
+    else
+        error('One (and only one) of dataRoot / MATUDP_DATAROOT, dataStoreRoot / MATUDP_DATASTOREROOT, subjectRoot / MATUDP_SUBJECTROOT should be specified');
     end
 end
 
