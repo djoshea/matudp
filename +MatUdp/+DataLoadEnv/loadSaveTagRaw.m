@@ -5,13 +5,21 @@ function [R, meta, loadInfo] = loadSaveTagRaw(varargin)
 p = inputParser();
 p.addParameter('maxTrials', Inf, @isscalar);
 p.addParameter('minDuration', 50, @isscalar);
-p.addParameter('saveTag', 1, @isvector);
+p.addParameter('saveTag', [], @isvector);
 p.addParameter('excludeGroups', {}, @iscellstr); % strip signals from specific groups
 p.KeepUnmatched = true;
 p.parse(varargin{:});
 maxTrials = p.Results.maxTrials;
 
+% if not specified load all save tags
 saveTag = p.Results.saveTag;
+if isempty(saveTag)
+    [saveTag, folder] = MatUdp.DataLoadEnv.listSaveTags(p.Unmatched);
+    if isempty(saveTag)
+        error('Could not find any save tags in directory %s', folder);
+    end
+end
+
 nST = numel(saveTag);
 [trialsC, metaByTrialC] = deal(cell(nST, 1));
 for iST = 1:nST
