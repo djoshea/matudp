@@ -4,9 +4,10 @@ function p = getGeneratedCodePath()
 
 try
     p = evalin('base', 'BusSerializeInfo.codePath');
-    assert(~isempty(p));
 catch
-    error('Call BusSerialize.setGeneratedCodePath(''/path/to/code'') to indicate where to store authored code');
+    p = [];
 end
+
+assert(~isempty(p), 'Call BusSerialize.setGeneratedCodePath(''/path/to/code'') to indicate where to store authored code');
 
 end

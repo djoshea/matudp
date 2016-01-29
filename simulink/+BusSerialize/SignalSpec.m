@@ -346,10 +346,16 @@ classdef SignalSpec < handle
             p.KeepUnmatched = true;
             p.parse(varargin{:});
             
-            % get default value if not specified
+            % use either empty or default value if not specified, empty is
+            % when the length is variable. Can't use .empty in codegen as
+            % of R2015a
             v = p.Results.value;
             if isempty(v)
-                v = eval([enumName '.getDefaultValue()']);
+%                 if isfield(p.Unmatched, 'isVariableByDim') && any(p.Unmatched.isVariableByDim)
+%                     v = eval([enumName '.empty()']);
+%                 else
+                    v = eval([enumName '.getDefaultValue()']);
+%                 end
             end
             
             % a value specified with a Simulink enum type
@@ -379,10 +385,15 @@ classdef SignalSpec < handle
             p.KeepUnmatched = true;
             p.parse(varargin{:});
             
-            % get default value if not specified
+            % use either empty or default value if not specified, empty is
+            % when the length is variable. Can't use .empty in codegen
             v = p.Results.value;
             if isempty(v)
-                v = eval([enumName '.getDefaultValue()']);
+%                 if isfield(p.Unmatched, 'isVariableByDim') && any(p.Unmatched.isVariableByDim)
+%                     v = eval([enumName '.empty()']);
+%                 else
+                    v = eval([enumName '.getDefaultValue()']);
+%                 end
             end
             
             % a value specified with a Simulink enum type
