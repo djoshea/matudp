@@ -54,7 +54,7 @@ classdef ShiftScaleCoordSystem < CoordSystem
 
     methods
         function lims = getLimitsRect(cs, si)
-            [pixW, pixH] = Screen('WindowSize', cs.screenIdx);
+            [pixW, pixH] = Screen('WindowSize', si.screenIdx);
             limX = cs.toUx(si, [0 pixW-1]);
             limY = cs.toUy(si, [0 pixH-1]);
             lims = [min(limX) min(limY) max(limX) max(limY)];
