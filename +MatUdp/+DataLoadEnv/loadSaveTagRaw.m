@@ -1,4 +1,4 @@
-function [R, meta, loadInfo] = loadSaveTagRaw(varargin)
+function [R, meta] = loadSaveTagRaw(varargin)
 % see MatUdp.DataLoadEnv.buildPathToSaveTag for path specification
 % parameters
 
@@ -29,8 +29,8 @@ for iST = 1:nST
 end
 
 %debug('Concatenating trial data...\n');
-R = structcat(cat(1, trialsC{:}));
-meta = structcat(cat(1, metaByTrialC{:}));
+R = TrialDataUtilities.Data.structcat(1, cat(1, trialsC{:}));
+meta = TrialDataUtilities.Data.structcat(1, cat(1, metaByTrialC{:}));
 
 if isempty(R)
     return;

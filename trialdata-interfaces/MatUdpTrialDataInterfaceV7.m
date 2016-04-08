@@ -361,8 +361,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                 tdi.newR = R;
                 tdi.newMeta = meta;
             else
-                tdi.newR = TrialDataUtilities.Data.structcat(tdi.newR, R);
-                tdi.newMeta = TrialDataUtilities.Data.structcat(tdi.newMeta, meta);
+                tdi.newR = TrialDataUtilities.Data.structcat(1, tdi.newR, R);
+                tdi.newMeta = TrialDataUtilities.Data.structcat(1, tdi.newMeta, meta);
             end
         end
 
@@ -377,8 +377,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
         end
 
         function markNewChannelDataAsReceived(tdi)
-            tdi.trials = TrialDataUtilities.Data.structcat(tdi.trials, tdi.newR);
-            tdi.meta = TrialDataUtilities.Data.structcat(tdi.meta, tdi.newMeta);
+            tdi.trials = TrialDataUtilities.Data.structcat(1, tdi.trials, tdi.newR);
+            tdi.meta = TrialDataUtilities.Data.structcat(1, tdi.meta, tdi.newMeta);
             tdi.newR = [];
             tdi.newMeta = [];
         end

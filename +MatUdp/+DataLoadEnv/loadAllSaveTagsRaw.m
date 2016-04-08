@@ -15,7 +15,7 @@ for iST = 1:nST
 end
 prog.finish();
 
-R = structcat(cat(1, Rc{:}));
-meta = structcat(cat(1, metac{:}));
+R = TrialDataUtilities.Data.structcat(1, Rc{:});
+meta = TrialDataUtilities.Data.structcat(1, metac{:});
 
 end
