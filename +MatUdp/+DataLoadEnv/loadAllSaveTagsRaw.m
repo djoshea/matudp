@@ -7,7 +7,7 @@ end
 
 nST = numel(saveTags);
 prog = ProgressBar(nST, 'Loading Save Tags %s', strjoin(saveTags, ','));
-[Rc, metac] = deal(cell(nST));
+[Rc, metac] = deal(cell(nST, 1));
 for iST = 1:nST
     prog.update(iST);
     [Rc{iST}, metac{iST}] = MatUdp.DataLoadEnv.loadSaveTagRaw(varargin{:}, ...
