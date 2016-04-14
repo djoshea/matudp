@@ -172,7 +172,7 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                 % now detect units
                 channelDescriptors(iChannel) = ParamChannelDescriptor.buildBooleanParam('hasNeuralData');
             end
-
+            
             if isfield(trials, 'spikeChannels') && isfield(trials, 'spikeUnits')
                 channelUnits = unique([cat(1, trials.spikeChannels), cat(1, trials.spikeUnits)], 'rows'); %#ok<*PROPLC,*PROP>
                 nUnits = size(channelUnits, 1);
@@ -180,6 +180,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                 unitFieldNames = cell(nUnits, 1);
                 waveFieldNames = cell(nUnits, 1);
                 maskKeep = falsevec(nUnits);
+                
+                waveformsClass = ChannelDescriptor.getCellElementClass({trials.spikeWaveforms});
 
                 prog = ProgressBar(nUnits, 'Adding spike units and waveforms');
                 for iU = 1:nUnits
@@ -194,10 +196,10 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                     unitFieldNames{iU} = unitName;
 
                     % note that this assumes a homogenous scale factor of 250 (or divide by 0.25 to get uV)
-                    if tdi.includeWaveforms && isfield(tdi.trials, 'spikeWaveforms')
+                    if tdi.includeWaveforms && isfield(trials, 'spikeWaveforms')
                         wavefield = sprintf('%s_waveforms', unitName);
                         waveFieldNames{iU} = wavefield;
-                        cd = cd.addWaveformsField(wavefield, 'time', tdi.waveformTvec); %, ...
+                        cd = cd.addWaveformsField(wavefield, 'time', tdi.waveformTvec, 'dataClass', waveformsClass); %, ...
 %                             'scaleFromLims', [-32768 32767], 'scaleToLims', [-32768 32767]);
                     end
 
@@ -235,6 +237,9 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
 
                 % save this so we can check later
                 tdi.nContinuousNeuralChannels = nCh;
+                
+                % detect data class used in memory
+                continuousNeuralClass = ChannelDescriptor.getCellElementClass({trials.continuousData});
 
                 % here we build each continuous channel as a shared matrix
                 % column of the field .continuousData, which we'll
@@ -247,7 +252,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                         'continuousData', iCh, ... % shared field name, column index
                         'continuousData_time', 'uV', 'ms', ... % timeField, units, timeUnits,
                         'scaleFromLims', [-32768 32767], ...
-                        'scaleToLims', [-8191 8191]);
+                        'scaleToLims', [-8191 8191], ...
+                        'dataClass', continuousNeuralClass);
 
                     channelDescriptors(iChannel) = cd;
                     iChannel = iChannel + 1;
@@ -345,7 +351,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                     else
                         % transpose so that each channel is along a column, not
                         % a row. 
-                        channelData(iT).continuousData = trials(iT).continuousData';
+                        trials(iT).continuousData = trials(iT).continuousData';
+                        channelData(iT).continuousData = trials(iT).continuousData;
                     end
                 end
                 prog.finish()
