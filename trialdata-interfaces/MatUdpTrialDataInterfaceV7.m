@@ -116,7 +116,7 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
 
                     % this is a bug with meta building in the data logger
                     % as of version 6. this field is used internally to add
-                    % offsets to the analo gsignal, but it won't actually
+                    % offsets to the analog signal, but it won't actually
                     % be present in the trials struct
                     if strcmpi(group.type, 'analog') && ~isempty(strfind(name, '_timestampOffsets'))
                         continue;
@@ -141,6 +141,12 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
 
                     dataCell = {trials.(dataFieldMain)};
 
+                    % fix bug with 'enum' units
+                    if strcmp(signalInfo.units, 'enum')
+                        signalInfo.units = '';
+                        group.type = 'param';
+                    end
+                    
                     switch(lower(group.type))
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
