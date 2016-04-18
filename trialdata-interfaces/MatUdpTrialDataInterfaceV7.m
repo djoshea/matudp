@@ -111,8 +111,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                 nSignals = numel(group.signalNames);
                 for iS = 1:nSignals
                     iSignal = iSignal + 1;
-                    prog.update(iSignal);
                     name = group.signalNames{iS};
+                    prog.update(iSignal, 'Inferrring channel characteristics: %s', name);
 
                     % this is a bug with meta building in the data logger
                     % as of version 6. this field is used internally to add
@@ -141,13 +141,15 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
 
                     dataCell = {trials.(dataFieldMain)};
 
+                    groupTypeThis = group.type;
+                    
                     % fix bug with 'enum' units
                     if strcmp(signalInfo.units, 'enum')
                         signalInfo.units = '';
-                        group.type = 'param';
+                        groupTypeThis = 'param';
                     end
                     
-                    switch(lower(group.type))
+                    switch(lower(groupTypeThis))
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
                             cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
@@ -336,24 +338,44 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
 
             % add continuous datas
             if tdi.includeContinuousNeuralData && isfield(trials, 'continuousData')
+                
+                % determine memory class
+                memClass = 'single';
+                for iT = 1:numel(trials)
+                    v = trials(iT).continuousData;
+                    if ~isempty(v) && ~iscell(v)
+                        memClass = class(v);
+                        break;
+                    end
+                end
+                
+                % build the nan/zeros fn in case we need to reallocate data
+                if ismember(memClass, {'single', 'double'})
+                    allocFn = @(varargin) nan(varargin{:}, memClass);
+                else
+                    allocFn = @(varargin) zeros(varargin{:}, memClass);
+                end
+                
                 assert(isfield(trials, 'continuousData_time'), 'Missing continuous neural data time field continuousData_time');
                 prog = ProgressBar(numel(channelData), 'Extracting continuous neural data for trials');
+                maskChangedTrialCount = falsevec(numel(channelData));
                 for iT = 1:numel(channelData)
                     prog.update(iT);
                     % if continuousData is a cell, the number of
                     % trials changed mid trial and we discard
                     if iscell(trials(iT).continuousData)
-                        channelData(iT).continuousData = nan(tdi.nContinuousNeuralChannels, 0);
+                        maskChangedTrialCount(iT) = true;
+                        channelData(iT).continuousData = allocFn(0, tdi.nContinuousNeuralChannels);
+                        
                         continue;
                     end
                         
                     nChThisTrial = size(trials(iT).continuousData, 1);
                     nSamples = size(trials(iT).continuousData, 2);
                     if nChThisTrial ~= tdi.nContinuousNeuralChannels
-                        warning('Trial %d has %d continuous neural channels, other trials have %d', iT, nChThisTrial, tdi.nContinuousNeuralChannels);
-                    
-                        channelData(iT).continuousData = nan(tdi.nContinuousNeuralChannels, nSamples);
-                        channelData(iT).continuousData(1:nChThisTrial, :) = trials(iT).continuousData';
+                        maskChangedTrialCount(iT) = true;
+                        channelData(iT).continuousData = allocFn(nSamples, tdi.nContinuousNeuralChannels);
+                        channelData(iT).continuousData(:, 1:nChThisTrial) = trials(iT).continuousData';
                     else
                         % transpose so that each channel is along a column, not
                         % a row. 
@@ -361,7 +383,11 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                         channelData(iT).continuousData = trials(iT).continuousData;
                     end
                 end
-                prog.finish()
+                prog.finish();
+                
+                if any(maskChangedTrialCount)
+                    warning('%d Trials had different number of continuous neural channels, some trials have %d', nnz(maskChangedTrialCount), tdi.nContinuousNeuralChannels);
+                end
             end
         end
     end
