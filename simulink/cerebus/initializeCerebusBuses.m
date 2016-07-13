@@ -49,6 +49,13 @@ s.continuousData = SignalSpec.Analog(zeros(0, 0, 'int16'), 'mV', ...
 BusSerialize.createBusBaseWorkspace('ContinuousDataBus', s, 'headerFile', cerebusHeaderFile);
 clear s;
 
+% COMMENT THIS LINE OUT IF YOU DO NOT WANT GENERATED CODE
+% If you do not need the generated code, then first specify the generated
+% code path, i.e.:
+%   BusSerialize.setGeneratedCodePath('/path/to/generatedCode');
+%
+% Generated code is not necessary for parsing the incoming packets, only
+% for subsequently serializing the buses for use with udpTrialLogger.
 BusSerialize.updateCodeForBuses({'SpikeDataBus', 'ContinuousDataBus', 'CerebusStatisticsBus'});
 
 end
