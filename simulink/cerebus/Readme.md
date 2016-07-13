@@ -2,6 +2,8 @@
 
 These library blocks receive, parse, and organize UDP packets received on the Simulink Real time computer that originate from a Blackrock Cerebus NSP. This block parses spike packets (preserving spike waveforms) and continuous packets.
 
+Author: Dan O'Shea 2016.
+
 ## Features:
 
 - Minimizes memcpy operations to speed the receiving and processing of the UDP packets. This is done by means of a custom UDP receive block that builds on top of Simulink's real time UDP blocks
@@ -43,3 +45,15 @@ BusSerialize.updateCodeForBuses({'SpikeDataBus', 'ContinuousDataBus', 'CerebusSt
 - Double click on the UDP expose block to configure the UDP receive settings.
 
 - Update and build the model, connect to Real time target and press play. Use the fake brain to generate data and see if you can see the continuous data samples and spike rates on the real time machine.
+
+# Integrating into your own model
+
+- You will need to copy the file `CerebusBuses.h` into your model's directory. This will be generated for you automatically by Simulink when the model is built, but they are also needed by the parseCerebus block in `libCerebusParseInC`. If you change the parameters of the buffer sizes inside `initializeCerebusBuses.m`, you will need to copy the updated `CerebusBuses.h` into your model's directory after attempting to build once (which will likely fail since the bus definitions have changed). 
+
+- Use the blocks from `libCerebusParseInC.m` to build your Cerebus parsing pipeline, or just copy the contents of `testCerebusParseInC`. If you wish to remove any dependencies on the library blocks, you can right click on these blocks and disable/break the library links.
+
+- If you do not wish to use the bus-creation infrastructure of BusSerialize, you can save the created buses to a .mat file using `buseditor` and simply load them in at model initialization.
+
+- If not, you will need to run `initializeCerebusBuses` as part of your model's initialization procedure.
+
+
