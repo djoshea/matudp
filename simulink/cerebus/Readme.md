@@ -48,6 +48,8 @@ BusSerialize.updateCodeForBuses({'SpikeDataBus', 'ContinuousDataBus', 'CerebusSt
 
 # Integrating into your own model
 
+- First, follow the instructions above. You will need to have built the `xpcnbexpose.c` and `xpcnbfree.c` files and added `matudp/simulink/cerebus` to your Matlab path.
+
 - You will need to copy the file `CerebusBuses.h` into your model's directory. This will be generated for you automatically by Simulink when the model is built, but they are also needed by the parseCerebus block in `libCerebusParseInC`. If you change the parameters of the buffer sizes inside `initializeCerebusBuses.m`, you will need to copy the updated `CerebusBuses.h` into your model's directory after attempting to build once (which will likely fail since the bus definitions have changed). 
 
 - You will need to add `cerebusParse.c` to the list of source files that are automatically built with your model. You can do this by adding "cerebusParse.c" to the Model Configuration under "Configuration Parameters ->
