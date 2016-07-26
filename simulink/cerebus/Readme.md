@@ -50,6 +50,10 @@ BusSerialize.updateCodeForBuses({'SpikeDataBus', 'ContinuousDataBus', 'CerebusSt
 
 - You will need to copy the file `CerebusBuses.h` into your model's directory. This will be generated for you automatically by Simulink when the model is built, but they are also needed by the parseCerebus block in `libCerebusParseInC`. If you change the parameters of the buffer sizes inside `initializeCerebusBuses.m`, you will need to copy the updated `CerebusBuses.h` into your model's directory after attempting to build once (which will likely fail since the bus definitions have changed). 
 
+- You will need to add `cerebusParse.c` to the list of source files that are automatically built with your model. You can do this by adding "cerebusParse.c" to the Model Configuration under "Configuration Parameters ->
+Code Generation -> Custom Code -> Additional Build Information -> Source
+Files -> Source Files"
+
 - Use the blocks from `libCerebusParseInC.m` to build your Cerebus parsing pipeline, or just copy the contents of `testCerebusParseInC`. If you wish to remove any dependencies on the library blocks, you can right click on these blocks and disable/break the library links.
 
 - If you do not wish to use the bus-creation infrastructure of BusSerialize, you can save the created buses to a .mat file using `buseditor` and simply load them in at model initialization.
