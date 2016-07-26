@@ -23,7 +23,7 @@ Author: Dan O'Shea 2016.
 
 - Add `matudp/simulink` and all subfolders to the Matlab path.
 
-- Build the required Mex files `xpcnbexpose.c` and `xpcnbfree.c`. You can do this by running `buildMexCode.m`
+- Build the required Mex files `xpcnbexpose.c` and `xpcnbfree.c`. You can do this by `cd`ing into the `matudp/simulink/cerebus` directory and running `buildMexCode.m`. You will need to have setup a mex compiler for this to work, but chances are you've already done this.
 
 - If you would like serialization / deserialization code for the Cerebus buses to be auto-generated for you by `BusSerialize`, then you need to specify a path in which to save the generated code, i.e. by running 
 
