@@ -6,7 +6,7 @@ if isempty(saveTags)
 end
 
 nST = numel(saveTags);
-prog = ProgressBar(nST, 'Loading Save Tags %s', strjoin(saveTags, ','));
+prog = ProgressBar(nST, 'Loading Save Tags %s', MatUdp.Utils.strjoin(saveTags, ','));
 [Rc, metac] = deal(cell(nST, 1));
 for iST = 1:nST
     prog.update(iST);

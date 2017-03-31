@@ -23,4 +23,4 @@ tdi.includeContinuousNeuralData = p.Results.includeContinuousNeuralData;
 td = TrialData(tdi);
 
 td.datasetName = sprintf('%s %s %s saveTag %s', info.subject, info.dateStr, ...
-  info.protocol, strjoin(info.saveTag,','));
+  info.protocol, MatUdp.Utils.strjoin(info.saveTag,','));
