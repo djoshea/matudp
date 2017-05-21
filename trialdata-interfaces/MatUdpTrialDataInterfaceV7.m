@@ -74,7 +74,7 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
 %                  'saveTag', 'tsStartWallclock', 'tsStopWallclock', ...
 %                  'tUnits', 'version', 'time'});
             p = inputParser();
-            p.addParamValue('suppressWarnings', false, @islogical);
+            p.addParameter('suppressWarnings', false, @islogical);
             p.parse(varargin{:});
             suppressWarnings = p.Results.suppressWarnings;
 
@@ -118,7 +118,7 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                     % as of version 6. this field is used internally to add
                     % offsets to the analog signal, but it won't actually
                     % be present in the trials struct
-                    if strcmpi(group.type, 'analog') && ~isempty(strfind(name, '_timestampOffsets'))
+                    if strcmpi(group.type, 'analog') && ~isempty(strfind(name, '_timestampOffsets')) %#ok<STREMP>
                         continue;
                     end
 
@@ -131,6 +131,8 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                             continue;
                         end
                         signalInfo = signals.(name);
+                    else
+                        signalInfo = struct('type', 'Event', 'units', tdi.timeUnits);
                     end
                     dataFieldMain = name;
 
@@ -142,14 +144,15 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                     dataCell = {trials.(dataFieldMain)};
 
                     groupTypeThis = group.type;
+                    signalType = signalInfo.type;
                     
                     % fix bug with 'enum' units
                     if strcmp(signalInfo.units, 'enum')
                         signalInfo.units = '';
-                        groupTypeThis = 'param';
+%                         groupTypeThis = 'param';
                     end
                     
-                    switch(lower(groupTypeThis))
+                    switch(lower(signalType))
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
                             cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
@@ -161,7 +164,7 @@ classdef MatUdpTrialDataInterfaceV7 < TrialDataInterface
                         case 'param'
                             cd = ParamChannelDescriptor.buildFromValues(name, dataCell, signalInfo.units);
                         otherwise
-                            error('Unknown field type %s for channel %s', group.type, name);
+                            error('Unknown field type %s for channel %s', signalType, name);
                     end
 
                     cd.groupName = group.name;
