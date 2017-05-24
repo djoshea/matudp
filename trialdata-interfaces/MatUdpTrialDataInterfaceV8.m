@@ -143,16 +143,18 @@ classdef MatUdpTrialDataInterfaceV8 < TrialDataInterface
                     end
 
                     dataCell = {trials.(dataFieldMain)};
-
-                    groupTypeThis = group.type;
-                    
+                
                     % fix bug with 'enum' units
                     if strcmp(signalInfo.units, 'enum')
-                        signalInfo.units = '';
-                        % groupTypeThis = 'param';
+                        signalInfo.units = '';    
                     end
                     
-                    switch(lower(signalType))
+                    if strcmpi(signalInfo.type, 'Analog') && strcmpi(group.type, 'Param')
+                        % signal can't be analog if group is param
+                        signalInfo.type = 'Param';
+                    end
+                    
+                    switch(lower(signalInfo.type))
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
                             cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
