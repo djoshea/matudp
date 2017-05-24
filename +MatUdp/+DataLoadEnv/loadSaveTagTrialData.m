@@ -1,9 +1,9 @@
 function [td] = loadSaveTagTrialData(varargin)
 
 p = inputParser();
-p.addParamValue('includeSpikeData', true, @islogical);
-p.addParamValue('includeWaveforms', true, @islogical);
-p.addParamValue('includeContinuousNeuralData', true, @islogical);
+p.addParameter('includeSpikeData', true, @islogical);
+p.addParameter('includeWaveforms', true, @islogical);
+p.addParameter('includeContinuousNeuralData', true, @islogical);
 p.KeepUnmatched = true;
 p.parse(varargin{:});
 
@@ -13,7 +13,7 @@ info = MatUdp.DataLoadEnv.buildSaveTagInfo(p.Unmatched);
 
 %debug('Building TrialData...\n');
 if ~exist('tdi', 'var')
-    tdi = MatUdpTrialDataInterfaceV7(R, meta);
+    tdi = MatUdpTrialDataInterfaceV8(R, meta);
 end
 
 tdi.includeSpikeData = p.Results.includeSpikeData;
@@ -24,3 +24,4 @@ td = TrialData(tdi);
 
 td.datasetName = sprintf('%s %s %s saveTag %s', info.subject, info.dateStr, ...
   info.protocol, MatUdp.Utils.strjoin(info.saveTag,','));
+
