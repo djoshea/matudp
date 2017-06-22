@@ -145,7 +145,7 @@ classdef OvalTarget < Oval
             state = sd.saveState();
             if r.successful
                 sd.fillColor = [1 1 1];
-                sd.penColor = [0.5 0.5 0.5];
+                sd.penColor = [1 1 1];
             elseif r.acquired
                 sd.fillColor = r.fillColor;
                 sd.penColor = [1 1 1];
