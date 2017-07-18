@@ -14,6 +14,10 @@ function lines = generateCoderVarsizeStatementsForBus(busName, varName)
     for iElement = 1:numel(elements)
         e = elements(iElement);        
         signalSpec = busSpec.signals(iElement);
+        
+        if ~signalSpec.includeForSerialization
+            continue;
+        end
 
         if signalSpec.isBus
             dims = e.Dimensions;

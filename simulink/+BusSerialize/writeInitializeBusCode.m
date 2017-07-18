@@ -21,8 +21,11 @@ function writeInitializeBusCode(busName)
     
     for iElement = 1:numel(elements)
         e = elements(iElement);
-        
         signalSpec = busSpec.signals(iElement);
+        
+        if ~signalSpec.includeForSerialization
+            continue;
+        end
 
         % compute string to use for dimensions
         dims = e.Dimensions;

@@ -38,6 +38,10 @@ for i = 1:numel(elements)
     e = elements(i);
     signalSpec = busSpec.signals(i);
     
+    if ~signalSpec.includeForSerialization
+        continue;
+    end
+    
     if signalSpec.isBus
         % handle nested bus case
         innerBusName = BusSerialize.parseBusDataTypeStr(e.DataType);

@@ -22,6 +22,8 @@ classdef SignalSpec < handle
         % should this be cleared immediately after 1 tick when
         % de-serializing
         resetImmediately = false;
+        
+        includeForSerialization = true;
     end
     
     properties(Dependent)
@@ -58,6 +60,7 @@ classdef SignalSpec < handle
             p.addParameter('isEnum', false, @islogical);
             p.addParameter('enumName', '', @ischar);
             p.addParameter('resetImmediately', false, @islogical);
+            p.addParameter('includeForSerialization', true, @islogical);
             p.parse(varargin{:});
             
             % copy values over to class
@@ -99,6 +102,8 @@ classdef SignalSpec < handle
                     sv.maxSize = size(sv.value);
                 end
             end
+            
+            sv.includeForSerialization = p.Results.includeForSerialization;
             
             assert(ischar(sv.units));
             assert(isempty(sv.value) || numel(sv.isVariableByDim) == nDims, 'isVariableByDim must have numel == nDims');

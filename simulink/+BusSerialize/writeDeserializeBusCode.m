@@ -54,8 +54,11 @@ function writeDeserializeBusCode(busName, varargin)
     
     for iElement = 1:numel(elements)
         e = elements(iElement);
-        
         signalSpec = busSpec.signals(iElement);
+        
+        if ~signalSpec.includeForSerialization
+            continue;
+        end
 
         % compute total number of elements
         numElements = prod(e.Dimensions);
