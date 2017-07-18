@@ -216,8 +216,10 @@ classdef ScreenDraw < handle
             % convert into pixels
 %             px = sd.toPx([x1 x2]);
 %             py = sd.toPy([y1 y2]);
-             px = sd.toPx([px1 px2]);
-            py = sd.toPy([py1 py2]);
+%              px = sd.toPx([px1 px2]);
+%             py = sd.toPy([py1 py2]);
+            px = [px1 px2];
+            py = [py1 py2];
 
             rect = [min(px) min(py) max(px) max(py)];
             if filled
@@ -235,8 +237,7 @@ classdef ScreenDraw < handle
             py = [y1 y2];
 
             rect = [min(px) min(py) max(px) max(py)];
-            
-            
+
             if filled
                 Screen('FillOval', sd.window, sd.convertColor(sd.fillColor), rect);
             end
@@ -472,6 +473,7 @@ classdef ScreenDraw < handle
         function set.fontFace(sd, name)
             sd.fontFace = name;
             Screen('TextFont', sd.window, name);
+
             sd.charSizeCached = [];
         end
 

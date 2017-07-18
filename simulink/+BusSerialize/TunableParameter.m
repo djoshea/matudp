@@ -190,16 +190,29 @@ classdef TunableParameter < handle
                     return;
                 end
             end
-
-            if ~tp.isBus && ~tp.isVariableLengthBusArray
-                value = cast(value, tp.valueClass);
-            end
-        
+            
             if isvector(value)
                 value = BusSerialize.makecol(value);
             end
             assert(all(size(value) <= tp.valueSize), 'Value must be same size or smaller than old value');
-
+            
+            if ~tp.isBus && ~tp.isVariableLengthBusArray
+                % expand to original size of resetValue in case we're
+                % providing a smaller vector, matrix than originally
+                % specified
+                if strcmp(tp.valueClass, 'logical')
+                    fullValue = false(tp.valueSize);
+                else
+                    fullValue = zeros(tp.valueSize, tp.valueClass);
+                end
+                sz = size(value);
+                args = arrayfun(@(s) 1:s, sz, 'UniformOutput', false);
+                
+                fullValue(args{:}) = value;
+                
+                value = fullValue;
+            end
+        
             tp.incrementUpdateCounter();
             
             valueAsDouble = tp.getValueAsDouble(value);
