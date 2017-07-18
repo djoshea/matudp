@@ -10,6 +10,7 @@ classdef SignalSpec < handle
         isVariableByDim = false; % logical array indicating whether each dimension has variable length
         maxSize = []; % array of maximum size along each dimension
         
+        ndimsManual = []; % if set, ndims will be forced up to this number, useful when concatLastDim is true and we want to distinguish between multiple
         concatLastDim = true; % indicates which dimension to concatenate analog signals along
         
         isBus = false;
@@ -45,17 +46,18 @@ classdef SignalSpec < handle
         % below to construct
         function sv = SignalSpec(varargin)
             p = inputParser();
-            p.addParamValue('value', [], @(x) true);
-            p.addParamValue('units', '', @ischar);
-            p.addParamValue('type', BusSerialize.SignalTypes.Unspecified, @(x) isa(x, 'BusSerialize.SignalTypes'));
-            p.addParamValue('isVariableByDim', [], @islogical);
-            p.addParamValue('maxSize', [], @isvector);
-            p.addParamValue('concatLastDim', true, @islogical);
-            p.addParamValue('isBus', false, @islogical);
-            p.addParamValue('busName', '', @ischar);
-            p.addParamValue('isEnum', false, @islogical);
-            p.addParamValue('enumName', '', @ischar);
-            p.addParamValue('resetImmediately', false, @islogical);
+            p.addParameter('value', [], @(x) true);
+            p.addParameter('units', '', @ischar);
+            p.addParameter('type', BusSerialize.SignalTypes.Unspecified, @(x) isa(x, 'BusSerialize.SignalTypes'));
+            p.addParameter('isVariableByDim', [], @islogical);
+            p.addParameter('maxSize', [], @isvector);
+            p.addParameter('concatLastDim', true, @islogical);
+            p.addParameter('ndimsManual', [], @(x) isempty(x) || isscalar(x));
+            p.addParameter('isBus', false, @islogical);
+            p.addParameter('busName', '', @ischar);
+            p.addParameter('isEnum', false, @islogical);
+            p.addParameter('enumName', '', @ischar);
+            p.addParameter('resetImmediately', false, @islogical);
             p.parse(varargin{:});
             
             % copy values over to class
@@ -79,10 +81,16 @@ classdef SignalSpec < handle
             else
                 nDims = ndims(sv.value);
             end
+            sv.ndimsManual = p.Results.ndimsManual;
+            if ~isempty(nDimsManual)
+                nDims = max(nDimsManual, nDims);
+            end
             
             if ismember('isVariableByDim', p.UsingDefaults)
                 sv.isVariableByDim = false(1 , nDims);
             end
+            
+            sv.ndimsManual = p.Results.ndimsManual;
             
             if ismember('maxSize', p.UsingDefaults)
                 if nDims == 1
@@ -159,7 +167,7 @@ classdef SignalSpec < handle
             if sv.isLogical || sv.isChar
                 c = 'uint8';
             else
-                c = class(sv.value);
+                c = class(sv.value); %#ok<CPROP>
             end
         end
         
@@ -175,20 +183,27 @@ classdef SignalSpec < handle
             else
                 nDims = ndims(sv.value);
             end
+            
+            % force to be at least nDimsManual
+            if ~isempty(sv.ndimsManual)
+                nDims = max(nDims, sv.ndimsManual);
+            end
         end
         
         function dims = get.dims(sv)
             if sv.isVariable
                 dims = -1 * ones(1, sv.nDims);
             else
+                dims = ones(1, sv.nDims);
+                
                 if sv.isBus
-                    dims = sv.maxSize;
+                    dims(1:numel(sv.maxSize)) = sv.maxSize;
                 elseif isvector(sv.value)
-                    dims = numel(sv.value);
+                    dims(1) = numel(sv.value);
                 else
-                    dims = size(sv.value);
-                end
-            end 
+                    dims(1:numel(size(sv.value))) = size(sv.value);
+                end            
+            end
         end
         
         function bytes = get.bytesPerElement(sv)
@@ -374,6 +389,10 @@ classdef SignalSpec < handle
             p.parse(varargin{:});
             sv = BusSerialize.SignalSpec('type', BusSerialize.SignalTypes.Analog, ...
                 'value', value, 'units', p.Results.units, p.Unmatched);
+        end
+        
+        function sv = AnalogVectorMultiChannel(value, varargin)
+            sv = BusSerialize.SignalSpec.Analog(value, varargin{:}, 'ndimsManual', 2); % manually ensure concatenation is over columns
         end
         
         function sv = AnalogEnum(enumName, varargin)

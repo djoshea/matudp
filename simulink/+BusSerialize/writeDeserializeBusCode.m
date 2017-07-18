@@ -62,7 +62,7 @@ function writeDeserializeBusCode(busName, varargin)
         
         % compute string to use for dimensions
         dims = e.Dimensions;
-        ndims = numel(dims);
+        ndims = signalSpec.ndims;
         if ndims == 1
             dimsStr = mat2str([dims 1]);
             dimsForEmpty = [dims 1];
@@ -117,7 +117,7 @@ function writeDeserializeBusCode(busName, varargin)
                 dtid = getDataTypeIdFromName(signalSpec.class);
             end
                 
-            ndims = numel(e.Dimensions);
+            ndims = signalSpec.ndims;
             
             w('    expectedHeader_%s = uint8([%d, %d, typecast(uint16(numel(namePrefix) + %d), ''uint8''), namePrefix, ''%s'', typecast(uint16(%d), ''uint8''), ''%s'', %d, %d])'';\n', ...
                 e.Name, bitFlags, sigType, numel(e.Name), e.Name, ...
