@@ -33,7 +33,7 @@ function writeGetSerializedBusLengthCode(busName)
         signalSpec = busSpec.signals(i);
         dims = e.Dimensions;
         numElements = prod(dims);
-        nd = signalSpec.ndims; % use ndims since it might be forced larger than numel(dims)
+        nd = signalSpec.nDims; % use ndims since it might be forced larger than numel(dims)
 
         w('    %% element %s\n', e.Name);
         
