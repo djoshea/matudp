@@ -1,5 +1,9 @@
 function [R, meta, saveTags] = loadAllSaveTagsRaw(folder)
 
+if nargin < 1 || strcmp(folder, '')
+    folder = uigetdir('', 'Choose protocol folder');
+end
+
 % enumerate saveTag folders in that directory
 list = dir(folder);
 mask = falsevec(numel(list));
@@ -22,7 +26,7 @@ if isempty(saveTags)
 end
 
 nST = numel(saveTags);
-prog = ProgressBar(nST, 'Loading Save Tags %s', strjoin(saveTags, ','));
+prog = ProgressBar(nST, 'Loading %d save tags', nST);
 [Rc, metac] = deal(cell(nST));
 
 for iST = 1:nST
@@ -30,6 +34,6 @@ for iST = 1:nST
 end
 
 R = structcat(cat(1, Rc{:}));
-meta = structcat(cat(1, metaC{:}));
+meta = structcat(cat(1, metac{:}));
 
 end
