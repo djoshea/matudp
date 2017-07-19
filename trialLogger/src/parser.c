@@ -21,6 +21,7 @@ void processReceivedPacketData(const PacketData * pRaw)
 //    logInfo("processing raw data!");
 
     while(pBuf - pBufStart < pRaw->length) {
+
         if(*pBuf == 0) {
             // consider this the null terminator
             // odd-length packets are expanded to be even length in Simulink
@@ -38,7 +39,7 @@ void processReceivedPacketData(const PacketData * pRaw)
         nSignals = g.nSignals;
 
         if(nSignals == 0 || nSignals > MAX_GROUP_SIGNALS) {
-            logError("Group has too many signals (%d)\n", nSignals);
+            logError("Group %s has too many signals (%d)\n", g.name, nSignals);
             return;
         }
 
@@ -61,8 +62,8 @@ void processReceivedPacketData(const PacketData * pRaw)
             samples[iSignal].timestamp = g.lastTimestamp;
 
             if(pBuf == NULL) {
-                parseError = true;
-                logError("Error parsing signal from buffer\n");
+            	parseError = true;
+                logError("Error parsing signal %d / %d from buffer for group %s\n", iSignal+1, nSignals, g.name);
                 for(; iSignal >= 0; iSignal--)
                     freeSignalSampleData(samples + iSignal);
                 FREE(samples);
@@ -200,8 +201,8 @@ const uint8_t * parseSignalFromBuffer(const uint8_t * buffer, SignalSample* ps)
     STORE_UINT16(pBuf, lenName);
 
     if(lenName == 0 || lenName  > MAX_SIGNAL_NAME) {
-        logParsingError("Signal name too long (%d)", lenName);
-        return NULL;
+        logParsingError("Signal name too long (%d)\n", lenName);
+		return NULL;
     }
 
     // store the signal name
@@ -212,7 +213,7 @@ const uint8_t * parseSignalFromBuffer(const uint8_t * buffer, SignalSample* ps)
     STORE_UINT16(pBuf, lenUnits);
 
     if(lenUnits > MAX_SIGNAL_UNITS) {
-        logParsingError("Signal units too long (%d)", lenUnits);
+        logParsingError("Signal units too long (%d)\n", lenUnits);
         return NULL;
     }
 
@@ -300,7 +301,7 @@ const uint8_t * parseGroupInfoHeader(const uint8_t * buffer, GroupInfo *pg)
     // group name
     STORE_UINT16(pBuf, nChars);
     if(nChars == 0 || nChars > MAX_SIGNAL_NAME) {
-        logParsingError("Group name invalid length (%d)", nChars);
+        logParsingError("Group name invalid length (%d)\n", nChars);
         return NULL;
     }
     STORE_UINT8_ARRAY(pBuf, pg->name, nChars);
