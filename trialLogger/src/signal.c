@@ -371,6 +371,7 @@ SignalDataBuffer* buildSignalDataBufferFromSample(const SignalSample *ps) {
 
     psdb->isVariable = ps->isVariable;
     psdb->concatLastDim = ps->concatLastDim;
+    psdb->concatDimension = ps->concatDimension;
     psdb->type = ps->type;
 
     // and copy over the metadata fields

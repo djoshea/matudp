@@ -238,6 +238,12 @@ const uint8_t * parseSignalFromBuffer(const uint8_t * buffer, SignalSample* ps)
     // store the size along each dimension
     STORE_UINT16_ARRAY(pBuf, ps->dims, ps->nDims);
 
+    // set the concatenation dimension
+    if(ps->concatLastDim)
+        ps->concatDimension = ps->nDims;
+    else
+    	ps->concatDimension = 0;
+
     // compute the number of bytes in the data
     unsigned nElements = 1;
     for(int idim = 0; idim < ps->nDims; idim++) {
