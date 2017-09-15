@@ -879,6 +879,8 @@ void addEventGroupFields(mxArray* mxTrial, mxArray* mxGroupMeta,
         dataPtr += bytesThisSample;
         eventName[bytesThisSample] = '\0';
 
+        //logError("Event %s\n", eventName);
+
         // search for this eventName in the trie
         EventTrieInfo* info = (EventTrieInfo*)trie_lookup(eventTrie, eventName);
         if(info == NULL) {

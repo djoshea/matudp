@@ -26,6 +26,10 @@ void processReceivedPacketData(const PacketData * pRaw)
             // consider this the null terminator
             // odd-length packets are expanded to be even length in Simulink
             // so this can occasionally happen
+
+        	if (pRaw->length - (pBuf-pBufStart) > 1)
+        		logError("Packet parsing stopping due to NULL byte but %ld bytes remaining\n", pRaw->length - (pBuf-pBufStart));
+
             break;
         }
 
@@ -59,6 +63,10 @@ void processReceivedPacketData(const PacketData * pRaw)
         bool parseError = false;
         for(iSignal = 0; iSignal < nSignals; iSignal++) {
             pBuf = parseSignalFromBuffer(pBuf, samples + iSignal);
+
+            //if (strcmp(g.name, "taskEvent") == 0)
+            //	logError("Seeing event %s\n", samples[0].data);
+
             samples[iSignal].timestamp = g.lastTimestamp;
 
             if(pBuf == NULL) {
@@ -97,6 +105,7 @@ void processReceivedPacketData(const PacketData * pRaw)
             waitingNextTrial = controlGetWaitingForNextTrial();
 
             if(!waitingNextTrial) {
+
                 firstTimeGroupSeen = false;
                 // find existing group info onto the group trie
                 // and hold onto that pointer
