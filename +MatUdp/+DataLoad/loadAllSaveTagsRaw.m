@@ -10,7 +10,7 @@ mask = falsevec(numel(list));
 saveTags = nanvec(numel(list));
 
 for i = 1:numel(list)
-    if ~list(i).isdir, continue, end;
+    if ~list(i).isdir, continue, end
     r = regexp(list(i).name, 'saveTag(\d+)', 'tokens');
     if ~isempty(r)
         saveTags(i) = str2double(r{1});
