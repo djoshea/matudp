@@ -21,7 +21,6 @@ function writeDropVariableLengthSignalsFromBusCode(busName, busNameFixed)
     
     for iElement = 1:numel(elements)
         e = elements(iElement);
-        
         signalSpec = busSpec.signals(iElement);
 
         if ~signalSpec.isVariable
