@@ -27,5 +27,13 @@ classdef Settings
         function setProtocol(r)
             setenv('MATUDP_PROTOCOL', r);
         end
+        
+        function clear(r)
+            setenv('MATUDP_SUBJECTROOT');
+            setenv('MATUDP_DATAROOT');
+            setenv('MATUDP_DATASTOREROOT');
+            setenv('MATUDP_SUBJECT');
+            setenv('MATUDP_PROTOCOL');
+        end
     end
 end
