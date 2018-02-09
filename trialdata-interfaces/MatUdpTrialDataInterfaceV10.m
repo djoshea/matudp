@@ -276,7 +276,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                 % by data class
                 if tdi.useAnalogChannelGroups && strcmpi(group.type, 'analog')
                     % first lets mask out non-analog channels
-                    signalMask = cellfun(@(sigName) strcmpi(signals.(sigName).type, 'analog') && isempty(strfind(sigName, '_timestampOffsets')), group.signalNames);
+                    signalMask = cellfun(@(sigName) strcmpi(signals.(sigName).type, 'analog') && ~contains(sigName, '_timestampOffsets'), group.signalNames);
                     
                     firstSignal = signals.(group.signalNames{1});
                     timeField = firstSignal.timeFieldName;
@@ -339,7 +339,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                     % as of version 6. this field is used internally to add
                     % offsets to the analog signal, but it won't actually
                     % be present in the trials struct
-                    if strcmpi(group.type, 'analog') && ~isempty(strfind(name, '_timestampOffsets'))
+                    if strcmpi(group.type, 'analog') && contains(name, '_timestampOffsets')
                         continue;
                     end
 
@@ -478,7 +478,9 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                         nSamples(iS) = numel(dataBySignal{iS});
                     end
                     nSamplesMax = max(nSamples);
-                    assert(all(nSamples == nSamplesMax | nSamples == 0), 'Analog channel group signals have mismatched lengths');
+                    if ~isscalar(nSamples)
+                        assert(all(nSamples == nSamplesMax | nSamples == 0), 'Analog channel group signals have mismatched lengths');
+                    end
                     
                     if nSamplesMax > 0
                         if any(nSamples == 0)
