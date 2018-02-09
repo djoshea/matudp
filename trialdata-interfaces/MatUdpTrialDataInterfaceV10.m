@@ -1,4 +1,6 @@
-classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
+classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
+    % using analog channel groups where possible instead of lone analog
+    % channels
     % adding special handling of analog channel groups
     % adding support for multiple spike channel groups
     
@@ -11,6 +13,8 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
         waveformScalingFactor = 0.25;
         
         continuousDataType = 'broadband'; % or e.g. lfp
+        
+        useAnalogChannelGroups = true; % false will use lone analog channels
     end
 
     % like V3, but uses millisecond timestamps as doubles
@@ -19,7 +23,9 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
         meta % meta data merged over all trials
         nTrials
         timeUnits
-
+        
+        analogGroupChannelLists % struct where .group = {ch1 ch2 ch3}
+        
         spikeTimeFieldLookup
         spikeChannelFieldLookup % spikeChannels field in trials to use for each unit
         spikeUnitFieldLookup
@@ -39,7 +45,7 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
 
     methods
         % Constructor : bind to MatUdp R struct and parse channel info
-        function td = MatUdpTrialDataInterfaceV9(trials, meta)
+        function td = MatUdpTrialDataInterfaceV10(trials, meta)
             assert(isvector(trials) && ~isempty(trials) && isstruct(trials), 'Trial data must be a struct vector');
             assert(isstruct(meta) && ~isempty(meta) && isvector(meta), 'Meta data must be a vector struct');
             td.trials = makecol(trials);
@@ -92,6 +98,20 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
             iChannel = 1;
             groups = meta(1).groups;
             signals = meta(1).signals;
+
+            
+            % append any missing groups and signals from subsequent trials
+            for iT = 2:numel(trials)
+                newFlds = setdiff(fieldnames(meta(iT).groups), fieldnames(groups));
+                for iN = 1:numel(newFlds)
+                    groups.(newFlds{iN}) = meta(iT).groups.(newFlds{iN});
+                end
+                
+                newFlds = setdiff(fieldnames(meta(iT).signals), fieldnames(signals));
+                for iN = 1:numel(newFlds)
+                    signals.(newFlds{iN}) = meta(iT).signals.(newFlds{iN});
+                end
+            end
             groupNames = fieldnames(groups);
             nGroups = numel(groupNames);
 
@@ -103,9 +123,12 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
                 prog = ProgressBar(nChannels, 'Inferring channel data characteristics');
             end
 
+            tdi.analogGroupChannelLists = struct();
+            
             iSignal = 0;
             for iG = 1:nGroups
-                group = groups.(groupNames{iG});
+                groupName = groupNames{iG};
+                group = groups.(groupName);
 
                 % first detect spiking data group
                 if endsWith(group.name, 'spikeData') && strcmp(group.type, 'Analog')
@@ -248,18 +271,75 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
                         meta, 'UniformOutput', false, 'ErrorHandler', @(varargin) {});
                     group.signalNames = unique(cat(1, names{:}));
                 end
+                
+                % create analog groups for signals sent as a unit, grouped
+                % by data class
+                if tdi.useAnalogChannelGroups && strcmpi(group.type, 'analog')
+                    % first lets mask out non-analog channels
+                    signalMask = cellfun(@(sigName) strcmpi(signals.(sigName).type, 'analog') && isempty(strfind(sigName, '_timestampOffsets')), group.signalNames);
+                    
+                    firstSignal = signals.(group.signalNames{1});
+                    timeField = firstSignal.timeFieldName;
+                    timeClass = ChannelDescriptor.getCellElementClass({tdi.trials.(timeField)});
+                    unitsBySignal = cellfun(@(sigName) signals.(sigName).units, group.signalNames, 'UniformOutput', false);
+                    if numel(unique(unitsBySignal)) == 1
+                        units = unitsBySignal{1};
+                    else
+                        units = 'mixed';
+                    end
+                    
+                    % determine data class for each analog group
+                    dataClasses = cellfun(@(sigName) ChannelDescriptor.getCellElementClass({tdi.trials.(sigName)}), ...
+                        group.signalNames, 'UniformOutput', false); 
+                    dataClassUnique = unique(dataClasses(signalMask)); % only consider signals in signalMask
+                    nChannelGroups = numel(dataClassUnique);
+                    [~, whichChannelGroup] = ismember(dataClasses, dataClassUnique);
+                    whichChannelColumn = nan(numel(group.signalNames), 1);
+                    whichChannelGroup(~signalMask) = NaN;
+                    whichChannelColumn(~signalMask) = NaN;
+                    
+                    % add one analog channel group for each data class
+                    analogGroupCDs = cell(nChannelGroups, 1);
+                    for iCG = 1:nChannelGroups
+                        if nChannelGroups == 1 || strcmp(dataClassUnique{iCG}, 'double')
+                            channelGroupName = groupName;
+                        else
+                            channelGroupName = sprintf('%s_%s', groupName, dataClassUnique{iCG});
+                        end
+                        analogGroupCDs{iCG} = AnalogChannelGroupDescriptor.buildAnalogGroup(...
+                            channelGroupName, timeField, units, tdi.timeUnits, ...
+                            'dataClass', dataClassUnique{iCG}, 'timeClass', timeClass);
+                        channelDescriptors(iChannel) = analogGroupCDs{iCG};
+                        iChannel = iChannel + 1;
+                        
+                        % determine which channels belong in group
+                        mask = false(numel(group.signalNames), 1);
+                        for iS = 1:numel(group.signalNames)
+                            mask(iS) = signalMask(iS) && whichChannelGroup(iS) == iCG;
+                        end
+                        tdi.analogGroupChannelLists.(channelGroupName) = MatUdp.Utils.makecol(group.signalNames(mask));
+                        
+                        % and stick this subset of columns in order into
+                        % the analog group
+                        whichChannelColumn(mask) = 1:nnz(mask);
+                    end
+                    
+                    useAnalogGroup = true;
+                else
+                    useAnalogGroup = false;
+                end
 
                 nSignals = numel(group.signalNames);
                 for iS = 1:nSignals
                     iSignal = iSignal + 1;
                     name = group.signalNames{iS};
-                    prog.update(iSignal, 'Inferrring channel characteristics: %s', name);
+                    prog.update(iSignal, 'Inferring channel characteristics: %s', name);
 
                     % this is a bug with meta building in the data logger
                     % as of version 6. this field is used internally to add
                     % offsets to the analog signal, but it won't actually
                     % be present in the trials struct
-                    if strcmpi(group.type, 'analog') && ~isempty(strfind(name, '_timestampOffsets')) %#ok<STREMP>
+                    if strcmpi(group.type, 'analog') && ~isempty(strfind(name, '_timestampOffsets'))
                         continue;
                     end
 
@@ -297,7 +377,12 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
                     switch(lower(signalInfo.type))
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
-                            cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
+                            
+                            if ~useAnalogGroup
+                                cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
+                            else
+                                cd = analogGroupCDs{whichChannelGroup(iS)}.buildIndividualSubChannel(name, whichChannelColumn(iS));
+                            end
                             timeCell = {tdi.trials.(timeField)};
                             cd = cd.inferAttributesFromData(dataCell, timeCell);
                         case 'event'
@@ -314,7 +399,7 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
                     % store original field name to ease lookup in getDataForChannel()
                     cd.meta.originalField = dataFieldMain;
 
-                    channelDescriptors(iChannel) = cd; %#ok<AGROW>
+                    channelDescriptors(iChannel) = cd;
 
                     iChannel = iChannel + 1;
                 end
@@ -358,8 +443,16 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
 
         function channelData = getChannelDataForTrials(tdi, trials, channelDescriptors, varargin) %#ok<INUSD>
             %debug('Converting / repairing channel data...\n');
-            fieldsToRemove = {'spikeUnits', 'spikeChannels', 'spikeData_time', ...
-                'spikeWaveforms', 'continuousData'};
+            if tdi.useAnalogChannelGroups
+                analogGroups = fieldnames(tdi.analogGroupChannelLists);
+                analogChannelsInGroups = cellfun(@(grp) tdi.analogGroupChannelLists.(grp), analogGroups, 'UniformOutput', false);
+                analogChannelsInGroups = cat(1, analogChannelsInGroups{:});
+            else
+                analogChannelsInGroups = {};
+            end
+            
+            fieldsToRemove = cat(1, analogChannelsInGroups, {'spikeUnits'; 'spikeChannels'; 'spikeData_time'; ...
+                'spikeWaveforms'; 'continuousData'});
             channelData = rmfield(trials, intersect(fieldnames(trials), fieldsToRemove));
 
             % rename special channels
@@ -368,7 +461,41 @@ classdef MatUdpTrialDataInterfaceV9 < TrialDataInterface
                 channelData(i).TrialStart = 0;
                 channelData(i).TrialEnd = channelData(i).duration;
             end
-
+            
+            % combine analog channel groups
+            for iG = 1:numel(analogGroups)
+                groupName = analogGroups{iG};
+                signalNames = tdi.analogGroupChannelLists.(groupName);
+                
+                % concatenate as columns into combined field
+                prog = ProgressBar(numel(channelData), 'Combining analog group %s', groupName);
+                for iT = 1:numel(channelData)
+                    
+                    dataBySignal = cell(numel(signalNames), 1);
+                    nSamples = nan(numel(signalNames), 1);
+                    for iS = 1:numel(signalNames)
+                        dataBySignal{iS} = trials(iT).(signalNames{iS});
+                        nSamples(iS) = numel(dataBySignal{iS});
+                    end
+                    nSamplesMax = max(nSamples);
+                    assert(all(nSamples == nSamplesMax | nSamples == 0), 'Analog channel group signals have mismatched lengths');
+                    
+                    if nSamplesMax > 0
+                        if any(nSamples == 0)
+                            nonEmpty = dataBySignal{find(nSamples == nSamplesMax, 1)};
+                            empty = nan(nSamplesMax, 1, 'like', nonEmpty);
+                            dataBySignal(nSamples == 0) = empty;
+                        end
+                        channelData(iT).(groupName) = cat(2, dataBySignal{:});
+                    else
+                        channelData(iT).(groupName) = [];
+                    end
+                    
+                    prog.update(iT);
+                end
+                prog.finish();
+            end
+                    
             % add spike data
             if tdi.includeSpikeData
                 nUnits = size(tdi.channelUnits, 1);
