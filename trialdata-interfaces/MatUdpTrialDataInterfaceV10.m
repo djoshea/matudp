@@ -14,6 +14,8 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
         
         continuousDataType = 'broadband'; % or e.g. lfp
         
+        defaultArray = 'A';
+        
         useAnalogChannelGroups = true; % false will use lone analog channels
     end
 
@@ -139,7 +141,15 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                     assert(~isempty(tokens));
                     prefix = tokens{1}{1};
                     if isempty(prefix)
-                        prefix = 'neural';
+                        if isfield(trials, 'spikeChannels')
+                            prefix = '';
+                            chPrefix = tdi.defaultArray;
+                        else
+                            prefix = 'neural';
+                            chPrefix = tdi.defaultArray;
+                        end
+                    else
+                        chPrefix = tdi.defaultArray;
                     end
                     timeField = sprintf('%sspikeData_time', prefix);
                     chanField = sprintf('%sspikeChannels', prefix);
@@ -158,11 +168,12 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                         waveformsClass = ChannelDescriptor.getCellElementClass({trials.(waveField)});
 
                         prog = ProgressBar(nUnits, 'Adding spike units and waveforms');
-                        padToWidth = ceil(log10(nUnits+1));
                         for iU = 1:nUnits
                             prog.update(iU);
                             % use prefix as the array name
-                            unitName = sprintf('%s%0*d_%d', prefix, padToWidth, channelUnits(iU, 1), channelUnits(iU, 2));
+%                             unitName = sprintf('%s%0*d_%d', chPrefix, padToWidth, channelUnits(iU, 1), channelUnits(iU, 2));
+                            unitName = SpikeChannelDescriptor.generateNameFromArrayElectrodeUnit(chPrefix, ...
+                                channelUnits(iU, 1), channelUnits(iU, 2), nUnits);
 
                             if newOnly && isfield(tdi.trials, unitName)
                                 continue;
@@ -210,6 +221,12 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                     prefix = tokens{1}{1};
                     contField = sprintf('%scontinuousData', prefix);
                     
+                    if isempty(prefix)
+                        chPrefix = tdi.defaultArray;
+                    else
+                        chPrefix = prefix;
+                    end
+                    
                     if isfield(tdi.trials, contField) && newOnly
                         continue;
                     end    
@@ -231,7 +248,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                         continuousNeuralClass = ChannelDescriptor.getCellElementClass({trials.(contField)});
 
                         % build the continuous_data channel group
-                        cdGroup = ContinuousNeuralChannelGroupDescriptor.buildFromTypeArray(tdi.continuousDataType, prefix, ...
+                        cdGroup = ContinuousNeuralChannelGroupDescriptor.buildFromTypeArray(tdi.continuousDataType, chPrefix, ...
                             'uV', 'ms', ...
                             'scaleFromLims', [-32768 32767], ...
                             'scaleToLims', [-8191 8191], ...
@@ -246,7 +263,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                         padToWidth = max(3, ceil(log10(nCh+1)));
                         for iCh = 1:nCh
                             prog.update(iCh);
-                            chName = sprintf('%s_%s%0*d', tdi.continuousDataType, prefix, padToWidth, iCh);
+                            chName = sprintf('%s_%s%0*d', tdi.continuousDataType, chPrefix, padToWidth, iCh);
                             channelDescriptors(iChannel) = cdGroup.buildIndividualSubChannel(chName, iCh);
                             iChannel = iChannel + 1;
                         end
@@ -274,59 +291,62 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                 
                 % create analog groups for signals sent as a unit, grouped
                 % by data class
+                useAnalogGroup = false;
                 if tdi.useAnalogChannelGroups && strcmpi(group.type, 'analog')
                     % first lets mask out non-analog channels
-                    signalMask = cellfun(@(sigName) strcmpi(signals.(sigName).type, 'analog') && ~contains(sigName, '_timestampOffsets'), group.signalNames);
-                    
-                    firstSignal = signals.(group.signalNames{1});
-                    timeField = firstSignal.timeFieldName;
-                    timeClass = ChannelDescriptor.getCellElementClass({tdi.trials.(timeField)});
-                    unitsBySignal = cellfun(@(sigName) signals.(sigName).units, group.signalNames, 'UniformOutput', false);
-                    if numel(unique(unitsBySignal)) == 1
-                        units = unitsBySignal{1};
-                    else
-                        units = 'mixed';
-                    end
-                    
-                    % determine data class for each analog group
-                    dataClasses = cellfun(@(sigName) ChannelDescriptor.getCellElementClass({tdi.trials.(sigName)}), ...
-                        group.signalNames, 'UniformOutput', false); 
-                    dataClassUnique = unique(dataClasses(signalMask)); % only consider signals in signalMask
-                    nChannelGroups = numel(dataClassUnique);
-                    [~, whichChannelGroup] = ismember(dataClasses, dataClassUnique);
-                    whichChannelColumn = nan(numel(group.signalNames), 1);
-                    whichChannelGroup(~signalMask) = NaN;
-                    whichChannelColumn(~signalMask) = NaN;
-                    
-                    % add one analog channel group for each data class
-                    analogGroupCDs = cell(nChannelGroups, 1);
-                    for iCG = 1:nChannelGroups
-                        if nChannelGroups == 1 || strcmp(dataClassUnique{iCG}, 'double')
-                            channelGroupName = groupName;
+                    signalMask = cellfun(@(sigName) ~contains(sigName, '_timestampOffsets') && isfield(signals, sigName) && strcmpi(signals.(sigName).type, 'analog'), group.signalNames);
+                    if any(signalMask)
+                        signalNamesMasked = group.signalNames(signalMask);
+                        firstSignal = signals.(signalNamesMasked{1});
+                        timeField = firstSignal.timeFieldName;
+                        timeClass = ChannelDescriptor.getCellElementClass({tdi.trials.(timeField)});
+                        unitsBySignal = cellfun(@(sigName) signals.(sigName).units, signalNamesMasked, 'UniformOutput', false);
+                        if numel(unique(unitsBySignal)) == 1
+                            units = unitsBySignal{1};
                         else
-                            channelGroupName = sprintf('%s_%s', groupName, dataClassUnique{iCG});
+                            units = 'mixed';
                         end
-                        analogGroupCDs{iCG} = AnalogChannelGroupDescriptor.buildAnalogGroup(...
-                            channelGroupName, timeField, units, tdi.timeUnits, ...
-                            'dataClass', dataClassUnique{iCG}, 'timeClass', timeClass);
-                        channelDescriptors(iChannel) = analogGroupCDs{iCG};
-                        iChannel = iChannel + 1;
+
+                        % determine data class for each analog group
+                        dataClasses = cell(numel(group.signalNames), 1);
+                        dataClasses(signalMask) = cellfun(@(sigName) ChannelDescriptor.getCellElementClass({tdi.trials.(sigName)}), ...
+                            signalNamesMasked, 'UniformOutput', false);
+                        dataClasses(~signalMask) = {''};
                         
-                        % determine which channels belong in group
-                        mask = false(numel(group.signalNames), 1);
-                        for iS = 1:numel(group.signalNames)
-                            mask(iS) = signalMask(iS) && whichChannelGroup(iS) == iCG;
+                        dataClassUnique = unique(dataClasses(signalMask)); % only consider signals in signalMask
+                        nChannelGroups = numel(dataClassUnique);
+                        [~, whichChannelGroup] = ismember(dataClasses, dataClassUnique);
+                        whichChannelGroup(~signalMask) = NaN;
+
+                        % add one analog channel group for each data class
+                        whichChannelColumn = nan(numel(group.signalNames), 1);
+                        analogGroupCDs = cell(nChannelGroups, 1);
+                        for iCG = 1:nChannelGroups
+                            if nChannelGroups == 1 || strcmp(dataClassUnique{iCG}, 'double')
+                                channelGroupName = groupName;
+                            else
+                                channelGroupName = sprintf('%s_%s', groupName, dataClassUnique{iCG});
+                            end
+                            analogGroupCDs{iCG} = AnalogChannelGroupDescriptor.buildAnalogGroup(...
+                                channelGroupName, timeField, units, tdi.timeUnits, ...
+                                'dataClass', dataClassUnique{iCG}, 'timeClass', timeClass);
+                            channelDescriptors(iChannel) = analogGroupCDs{iCG};
+                            iChannel = iChannel + 1;
+
+                            % determine which channels belong in group
+                            mask = false(numel(group.signalNames), 1);
+                            for iS = 1:numel(group.signalNames)
+                                mask(iS) = signalMask(iS) && whichChannelGroup(iS) == iCG;
+                            end
+                            tdi.analogGroupChannelLists.(channelGroupName) = MatUdp.Utils.makecol(group.signalNames(mask));
+
+                            % and stick this subset of columns in order into
+                            % the analog group
+                            whichChannelColumn(mask) = 1:nnz(mask);
                         end
-                        tdi.analogGroupChannelLists.(channelGroupName) = MatUdp.Utils.makecol(group.signalNames(mask));
-                        
-                        % and stick this subset of columns in order into
-                        % the analog group
-                        whichChannelColumn(mask) = 1:nnz(mask);
-                    end
-                    
-                    useAnalogGroup = true;
-                else
-                    useAnalogGroup = false;
+
+                        useAnalogGroup = true;
+                    end                    
                 end
 
                 nSignals = numel(group.signalNames);
@@ -408,7 +428,10 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
 
             if ~newOnly
                 % now detect units
-                channelDescriptors(iChannel) = ParamChannelDescriptor.buildBooleanParam('hasNeuralData');
+                channelDescriptors(iChannel) = ParamChannelDescriptor.buildBooleanParam('hasNeuralSpikeData');
+                iChannel = iChannel + 1;
+                channelDescriptors(iChannel) = ParamChannelDescriptor.buildBooleanParam('hasNeuralContinuousData');
+                iChannel = iChannel + 1;
             end
             
             if ~exist('channelDescriptors', 'var')
@@ -499,13 +522,15 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
             end
                     
             % add spike data
+            for iT = 1:numel(channelData)
+                channelData(iT).hasNeuralSpikeData = false;
+            end
             if tdi.includeSpikeData
                 nUnits = size(tdi.channelUnits, 1);
                 prog = ProgressBar(numel(channelData), 'Extracting spike data for trials');
                 for iT = 1:numel(channelData)
                     prog.update(iT);
-                    channelData(iT).hasNeuralData = false;
-                                        
+                                       
                     % mark as zero if no spikes at all occurred on this trial,
                     % USE CAUTION IF FIRING RATES ARE VERY LOW!!
                     
@@ -514,7 +539,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                             trials(iT).(tdi.spikeUnitFieldLookup{iU}) == tdi.channelUnits(iU, 2);
 
                         if any(mask)
-                            channelData(iT).hasNeuralData = true;
+                            channelData(iT).hasNeuralSpikeData = true;
                         end
                         
                         fld = tdi.unitFieldNames{iU};
@@ -529,6 +554,9 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
             end
 
             % copy continuous data fields
+            for iT = 1:numel(channelData)
+                channelData(iT).hasNeuralContinuousData = false;
+            end
             if tdi.includeContinuousNeuralData 
                 for iG = 1:numel(tdi.continuousDataFieldsTrials)
                     fld = tdi.continuousDataFieldsTrials{iG};
@@ -582,6 +610,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                             channelData(iT).(fldOut) = trials(iT).(fld);
                         end
                         
+                        channelData(iT).hasNeuralContinuousData = nSamples > 0;
                     end
                     prog.finish();
 

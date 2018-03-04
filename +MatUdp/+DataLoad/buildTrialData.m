@@ -3,7 +3,7 @@ function td = buildTrialData(trials, meta, varargin)
     p.addParameter('includeSpikeData', true, @islogical);
     p.addParameter('includeWaveforms', true, @islogical);
     p.addParameter('includeContinuousNeuralData', true, @islogical);
-    p.KeepUnmatched = true;
+    p.KeepUnmatched = false;
     p.parse(varargin{:});
     
     tdi = MatUdpTrialDataInterfaceV10(trials, meta);
