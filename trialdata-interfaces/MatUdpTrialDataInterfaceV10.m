@@ -394,14 +394,20 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                         signalInfo.type = 'Param';
                     end
                     
-                    switch(lower(signalInfo.type))
+                    signalType = lower(signalInfo.type);
+                    if strcmp(signalType, 'normal')
+                        % this is from older versions
+                        signalType = group.type;
+                    end
+                    
+                    switch(signalType)
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
                             
                             if ~useAnalogGroup
                                 cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
                             else
-                                cd = analogGroupCDs{whichChannelGroup(iS)}.buildIndividualSubChannel(name, whichChannelColumn(iS));
+                                cd = analogGroupCDs{whichChannelGroup(iS)}.buildIndividualSubChannel(name, whichChannelColumn(iS), signalInfo.units);
                             end
                             timeCell = {tdi.trials.(timeField)};
                             cd = cd.inferAttributesFromData(dataCell, timeCell);
