@@ -131,6 +131,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
             for iG = 1:nGroups
                 groupName = groupNames{iG};
                 group = groups.(groupName);
+                whichChannelGroup = nan(numel(group.signalNames), 1);
 
                 % first detect spiking data group
                 if endsWith(group.name, 'spikeData') && strcmp(group.type, 'Analog')
@@ -293,8 +294,10 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                 % by data class
                 useAnalogGroup = false;
                 if tdi.useAnalogChannelGroups && strcmpi(group.type, 'analog')
-                    % first lets mask out non-analog channels
-                    signalMask = cellfun(@(sigName) ~contains(sigName, '_timestampOffsets') && isfield(signals, sigName) && strcmpi(signals.(sigName).type, 'analog'), group.signalNames);
+                    % first lets mask out non-analog channels. old data
+                    % uses 'normal' type instead of 'analog'
+                    signalMask = cellfun(@(sigName) ~contains(sigName, '_timestampOffsets') && isfield(signals, sigName) ...
+                        && (strcmpi(signals.(sigName).type, 'analog') || strcmpi(signals.(sigName).type, 'normal')), group.signalNames);
                     if any(signalMask)
                         signalNamesMasked = group.signalNames(signalMask);
                         firstSignal = signals.(signalNamesMasked{1});
@@ -313,11 +316,12 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                             signalNamesMasked, 'UniformOutput', false);
                         dataClasses(~signalMask) = {''};
                         
-                        dataClassUnique = unique(dataClasses(signalMask)); % only consider signals in signalMask
+                        dataClassUnique = setdiff(unique(dataClasses(signalMask)), {'cell'}); % only consider signals in signalMask
                         nChannelGroups = numel(dataClassUnique);
                         [~, whichChannelGroup] = ismember(dataClasses, dataClassUnique);
                         whichChannelGroup(~signalMask) = NaN;
-
+                        whichChannelGroup(whichChannelGroup==0) = NaN;
+                        
                         % add one analog channel group for each data class
                         whichChannelColumn = nan(numel(group.signalNames), 1);
                         analogGroupCDs = cell(nChannelGroups, 1);
@@ -404,7 +408,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                         case 'analog'
                             timeField = signalInfo.timeFieldName;
                             
-                            if ~useAnalogGroup
+                            if ~useAnalogGroup || isnan(whichChannelGroup(iS))
                                 cd = AnalogChannelDescriptor.buildVectorAnalog(name, timeField, signalInfo.units, tdi.timeUnits);
                             else
                                 cd = analogGroupCDs{whichChannelGroup(iS)}.buildIndividualSubChannel(name, whichChannelColumn(iS), signalInfo.units);
