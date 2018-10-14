@@ -150,7 +150,7 @@ classdef MatUdpTrialDataInterfaceV10 < TrialDataInterface
                             chPrefix = tdi.defaultArray;
                         end
                     else
-                        chPrefix = tdi.defaultArray;
+                        chPrefix = strip(prefix, '_');
                     end
                     timeField = sprintf('%sspikeData_time', prefix);
                     chanField = sprintf('%sspikeChannels', prefix);
