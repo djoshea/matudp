@@ -6,7 +6,7 @@ function td = buildTrialData(trials, meta, varargin)
     p.KeepUnmatched = false;
     p.parse(varargin{:});
     
-    tdi = MatUdpTrialDataInterfaceV10(trials, meta);
+    tdi = MatUdpTrialDataInterfaceV11(trials, meta);
     tdi.includeSpikeData = p.Results.includeSpikeData;
     tdi.includeWaveforms = p.Results.includeWaveforms;
     tdi.includeContinuousNeuralData = p.Results.includeContinuousNeuralData;
