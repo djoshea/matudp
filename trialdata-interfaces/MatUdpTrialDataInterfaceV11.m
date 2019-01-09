@@ -225,6 +225,10 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
 
                         electrodes = channelUnits(:, 1);
                         units = channelUnits(:, 2);
+                        
+                        if isempty(electrodes)
+                            continue;
+                        end
                         cd = SpikeArrayChannelDescriptor.build(chPrefix, electrodes, units);
                         
                         % note that this assumes a homogenous scale factor of 250 (or divide by 0.25 to get uV)
@@ -520,6 +524,7 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
         end
 
         function channelData = getChannelDataForTrials(tdi, trials, channelDescriptors, varargin) %#ok<INUSD>
+            
             %debug('Converting / repairing channel data...\n');
             if tdi.useAnalogChannelGroups
                 analogGroups = fieldnames(tdi.analogGroupChannelLists);
@@ -542,10 +547,13 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                 end
             end
             
-            fieldsToRemove = cat(1, analogChannelsInGroups, {'spikeUnits'; 'spikeChannels'; 'spikeData_time'; ...
-                'spikeWaveforms'; 'continuousData'});
-            channelData = rmfield(trials, intersect(fieldnames(trials), fieldsToRemove));
+            % we'll do this more selectively at the end now
+%             fieldsToRemove = cat(1, analogChannelsInGroups, {'spikeUnits'; 'spikeChannels'; 'spikeData_time'; ...
+%                 'spikeWaveforms'; 'continuousData'});
+%             channelData = rmfield(trials, intersect(fieldnames(trials), fieldsToRemove));
             
+            channelData = trials;
+
             % rename special channels
             for iT = 1:numel(channelData)
                 channelData(iT).timeStartWallclock = channelData(iT).wallclockStart;
@@ -603,6 +611,10 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                     eu = int32(tdi.arrayElectrodeUnits{iA});
                     euLookup = complex(eu(:, 1), eu(:, 2));
                     nUnits = size(eu, 1);
+                    
+                    if nUnits == 0
+                        continue;
+                    end
                     
                     for iT = 1:numel(channelData)
                         prog.update(iT);
@@ -692,6 +704,28 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
 
                     if any(maskChangedTrialCount)
                         warning('%d Trials had different number of continuous neural channels, some trials have %d', nnz(maskChangedTrialCount), tdi.nContinuousNeuralChannels);
+                    end
+                end
+            end
+            
+            % remove stray data fields
+            fieldsToKeep = unique(cat(2, channelDescriptors.dataFields)');
+            fieldsToRemove = setdiff(fieldnames(trials), fieldsToKeep);
+            channelData = rmfield(channelData, fieldsToRemove);
+            
+            % check time vectors to ensure everything is clean, matches
+            % data, and is monotonically increasing
+            
+            analogMask = arrayfun(@(cd) isa(cd, 'AnalogChannelGroupDescriptor') || (isa(cd, 'AnalogChannelDescriptor') && ~cd.isColumnOfSharedMatrix), channelDescriptors);
+            analogDataFields = arrayfun(@(cd) cd.dataFieldPrimary, channelDescriptors(analogMask), 'UniformOutput', false);
+            analogTimeFields = arrayfun(@(cd) cd.timeField, channelDescriptors(analogMask), 'UniformOutput', false);
+            [channelData, okayMask, messages] = TrialDataUtilities.Data.fixCheckAnalogDataMatchesTimeVectors(channelData, analogDataFields, analogTimeFields);
+            
+            if any(~okayMask)
+                fprintf('Issues found with the following analog channels:\n');
+                for iA = 1:numel(okayMask)
+                    if ~okayMask(iA)
+                        fprintf('  %s\n', messages{iA});
                     end
                 end
             end
