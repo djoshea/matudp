@@ -343,7 +343,7 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                         signalNames = group.signalNames;
                         firstSignal = signals.(signalNames{1});
                         timeField = firstSignal.timeFieldName;
-                        timeClass = ChannelDescriptor.getCellElementClass({trials.(timeField)});
+                        timeClass = ChannelImpl.getCellElementClass({trials.(timeField)});
                         
                         unitsBySignal = cellfun(@(sigName) signals.(sigName).units, signalNames, 'UniformOutput', false);
                         uniqUnits = unique(unitsBySignal);
@@ -354,7 +354,7 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                         end
 
                         % determine data class for each analog group
-                        dataClasses = cellfun(@(sigName) ChannelDescriptor.getCellElementClass({trials.(sigName)}), ...
+                        dataClasses = cellfun(@(sigName) ChannelImpl.getCellElementClass({trials.(sigName)}), ...
                             signalNames, 'UniformOutput', false);
                         
                         dataClassUnique = setdiff(unique(dataClasses), {'cell'}); % only consider signals in signalMask
