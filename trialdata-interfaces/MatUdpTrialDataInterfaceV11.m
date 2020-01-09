@@ -26,6 +26,11 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
     properties(SetAccess=protected)
         trials % original struct array over trials
         meta % meta data merged over all trials
+        
+        % accumulated over all trials
+        groups
+        signals 
+        
         renamedTrialsFields
         
         nTrials
@@ -153,6 +158,10 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                 end  
             end
             
+            
+            tdi.groups = groups;
+            tdi.signals = signals;
+            
             % do rename fields in trials
             if ~isempty(tdi.renamedTrialsFields)
                 oldFields = fieldnames(tdi.renamedTrialsFields);
@@ -221,7 +230,7 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                     if isfield(trials, chanField) && isfield(trials, unitField)
                         % uniquify channel + unit combinations
                         channelUnits = unique([cat(1, trials.(chanField)), cat(1, trials.(unitField))], 'rows'); %#ok<*PROPLC,*PROP>
-                        waveformsClass = ChannelDescriptor.getCellElementClass({trials.(waveField)});
+                        waveformsClass = ChannelImpl.getCellElementClass({trials.(waveField)});
 
                         electrodes = channelUnits(:, 1);
                         units = channelUnits(:, 2);
@@ -284,7 +293,7 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                         tdi.nContinuousNeuralChannels = nCh;
 
                         % detect data class used in memory
-                        continuousNeuralClass = ChannelDescriptor.getCellElementClass({trials.(contField)});
+                        continuousNeuralClass = ChannelImpl.getCellElementClass({trials.(contField)});
 
                         % build the continuous_data channel group
                         electrodes = (1:nCh)';
@@ -565,16 +574,23 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
             for iG = 1:numel(analogGroups)
                 groupName = analogGroups{iG};
                 signalNames = tdi.analogGroupChannelLists.(groupName);
+                concatDims = cellfun(@(sname) tdi.signals.(sname).concatDimension, signalNames);
                 
                 % concatenate as columns into combined field
                 prog = ProgressBar(numel(channelData), 'Combining analog group %s', groupName);
+                noSamples = false(numel(channelData), 1);
+                thisClass = 'double';
                 for iT = 1:numel(channelData)
-                    
                     dataBySignal = cell(numel(signalNames), 1);
                     nSamples = nan(numel(signalNames), 1);
                     for iS = 1:numel(signalNames)
                         dataBySignal{iS} = trials(iT).(signalNames{iS});
-                        nSamples(iS) = numel(dataBySignal{iS});
+                        
+                        % look at concatenation dimension which will correspond to time, move that dimension to be first
+                        if concatDims(iS) > 1
+                            dataBySignal{iS} = shiftdimToFirstDim(dataBySignal{iS}, concatDims(iS));
+                        end
+                        nSamples(iS) = size(dataBySignal{iS}, 1);
                     end
                     nSamplesMax = max(nSamples);
                     if ~isscalar(nSamples)
@@ -588,13 +604,19 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                             dataBySignal(nSamples == 0) = empty;
                         end
                         channelData(iT).(groupName) = cat(2, dataBySignal{:});
+                        thisClass = class(channelData(iT).(groupName));
                     else
                         channelData(iT).(groupName) = [];
+                        noSamples(iT) = true;
                     end
                     
                     prog.update(iT);
                 end
                 prog.finish();
+                
+                if any(noSamples)
+                    [channelData(noSamples).(groupName)] = deal(zeros(0, numel(signalNames), thisClass));
+                end
             end
                     
             % add spike data
@@ -707,7 +729,7 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                     end
                 end
             end
-            
+
             % remove stray data fields
             fieldsToKeep = unique(cat(2, channelDescriptors.dataFields)');
             fieldsToRemove = setdiff(fieldnames(trials), fieldsToKeep);
@@ -727,6 +749,13 @@ classdef MatUdpTrialDataInterfaceV11 < TrialDataInterface
                     if ~okayMask(iA)
                         fprintf('  %s\n', messages{iA});
                     end
+                end
+            end
+            
+            function [t, ndimOrig] = shiftdimToFirstDim(t, dim)
+                ndimOrig = ndims(t);
+                if dim ~= 1
+                    t = shiftdim(t, dim-1);
                 end
             end
         end
