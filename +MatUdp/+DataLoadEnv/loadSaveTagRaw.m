@@ -7,6 +7,7 @@ p.addParameter('maxTrials', Inf, @isscalar);
 p.addParameter('minDuration', 50, @isscalar);
 p.addParameter('saveTag', [], @isvector);
 p.addParameter('excludeGroups', {}, @iscellstr); % strip signals from specific groups
+p.addParameter('trialIdFilter', [], @isvector); % if specified, only load trial ids found in list
 p.KeepUnmatched = true;
 p.parse(varargin{:});
 maxTrials = p.Results.maxTrials;
@@ -25,7 +26,7 @@ nST = numel(saveTag);
 for iST = 1:nST
     folderSaveTag = MatUdp.DataLoadEnv.buildPathToSaveTag('saveTag', saveTag(iST), p.Unmatched);
     [trialsC{iST}, metaByTrialC{iST}] = MatUdp.DataLoadEnv.loadTrialsInDirectoryRaw(folderSaveTag, ...
-        'maxTrials', maxTrials, 'excludeGroups', p.Results.excludeGroups);
+        'maxTrials', maxTrials, 'excludeGroups', p.Results.excludeGroups, 'trialIdFilter', p.Results.trialIdFilter);
 end
 
 %debug('Concatenating trial data...\n');

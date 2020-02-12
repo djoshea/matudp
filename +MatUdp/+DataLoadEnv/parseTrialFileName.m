@@ -10,7 +10,7 @@ function [info, valid] = parseTrialFileName(fname)
             if ~isempty(match{i})
                 info(i, 1).subject = match{i}.subject; %#ok<*AGROW>
                 info(i, 1).protocol = match{i}.protocol;
-                info(i, 1).trialId = match{i}.trialId;
+                info(i, 1).trialId = str2double(match{i}.trialId);
                 info(i, 1).datenum = datenum(match{i}.timestamp, 'yyyymmdd.HHMMSS.FFF');
                 valid(i) = true;
             else
@@ -25,7 +25,7 @@ function [info, valid] = parseTrialFileName(fname)
         if ~isempty(match)
             info.subject = match.subject;
             info.protocol = match.protocol;
-            info.trialId = match.trialId;
+            info.trialId = str2double(match.trialId);
             info.datenum = datenum(match.timestamp, 'yyyymmdd.HHMMSS.FFF');
             valid = true;
         else

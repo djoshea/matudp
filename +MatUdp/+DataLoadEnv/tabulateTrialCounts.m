@@ -58,4 +58,6 @@ for iD = 1:numel(dateStr)
 end
 prog.finish();
 
+Date = string(Date);
+Protocol = string(Protocol);
 t = table(Date, Protocol, SaveTag, NumTrials);

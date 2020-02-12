@@ -3,15 +3,25 @@ function [trials, meta] = loadTrialsInDirectoryRaw(folder, varargin)
     p = inputParser();
     p.addParameter('maxTrials', Inf, @isscalar); % stop after max trials
     p.addParameter('excludeGroups', {}, @iscellstr); % strip signals from specific groups off
+    p.addParameter('trialIdFilter', [], @(x) isvector(x) || isempty(x)); % if specified, only load trial ids found in list
     p.parse(varargin{:});
     maxTrials = p.Results.maxTrials;
-
+    trialIdFilter = p.Results.trialIdFilter;
+    
     if ~exist(folder, 'dir')
         error('Folder %s does not exist', folder);
     end
-    names = MatUdp.DataLoadEnv.listTrialFilesInSaveTagFolder(folder);
+    [names, info] = MatUdp.DataLoadEnv.listTrialFilesInSaveTagFolder(folder);
     if isempty(names)
         error('No mat files found in %s', folder);
+    end
+    
+    if ~isempty(trialIdFilter)
+        % filter by those found in list
+        trialIdsFound = [info.trialId];
+        mask = ismember(trialIdsFound, trialIdFilter);
+        names = names(mask);
+%         info  = info(mask);
     end
         
     nFiles = numel(names);

@@ -1,4 +1,4 @@
-function files = listTrialFilesInSaveTagFolder(folderSaveTag)
+function [files, info] = listTrialFilesInSaveTagFolder(folderSaveTag)
 % Occasionally the file list will contain the same trial id duplicated at
 % nearby times. Here we remove duplicates if the timestamps are very close
 % (within 5 seconds). 
@@ -34,4 +34,5 @@ function files = listTrialFilesInSaveTagFolder(folderSaveTag)
     end
     
     files = files(valid);
+    info = info(valid);
 end
